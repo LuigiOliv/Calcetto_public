@@ -216,7 +216,7 @@ firebase.initializeApp(firebaseConfig);
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState('');
 
-			const handleGoogleLogin = () => {
+const handleGoogleLogin = () => {
                 setLoading(true);
                 setError('');
                 
@@ -240,6 +240,7 @@ firebase.initializeApp(firebaseConfig);
                 }
             };
 
+	
             return (
                 <div className="login-container">
                     <div className="login-card">
@@ -1344,7 +1345,7 @@ firebase.initializeApp(firebaseConfig);
    ⚠️ ATTENZIONE: Modificare con cautela!
    ========================================================================== */
 
-function App() {
+        function App() {
             const [currentUser, setCurrentUser] = useState(storage.getCurrentUser());
             const [activeTab, setActiveTab] = useState('valuta');
             const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -1357,12 +1358,12 @@ function App() {
             const [loading, setLoading] = useState(true);
 
             // Carica dati da Firestore all'avvio
+            useEffect(() => {
                 const loadData = async () => {
                     setLoading(true);
                     try {
                         let loadedUsers = await storage.getUsers();
                         
-                        // Se non ci sono utenti, inizializza con i giocatori iniziali
                         if (loadedUsers.length === 0) {
                             const initialUsers = INITIAL_PLAYERS.map(p => ({
                                 ...p,
@@ -1399,8 +1400,8 @@ function App() {
                     setShowClaimModal(true);
                 }
             };
-			
-		// Gestisci ritorno da redirect (mobile)
+
+			// Gestisci ritorno da redirect (mobile)
             useEffect(() => {
                 firebase.auth().getRedirectResult()
                     .then((result) => {
@@ -1411,9 +1412,9 @@ function App() {
                     .catch((err) => {
                         console.error('Redirect error:', err);
                     });
-            }, []);
-
-				const handleClaimProfile = async (playerId) => {
+            }, [users]);
+			
+            const handleClaimProfile = async (playerId) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
                 const claimedUser = { ...users.find(u => u.id === playerId), email: pendingEmail, claimed: true, isAdmin };
                 
@@ -1428,9 +1429,18 @@ function App() {
                 if (!claimedUser.preferredRole) setShowRoleModal(true);
             };
 
-				const handleNewPlayer = async (playerName) => {
+            const handleNewPlayer = async (playerName) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
-                const newUser = { id: `player${Date.now()}`, name: playerName || pendingEmail.split('@')[0],
+                const newUser = { 
+                    id: `player${Date.now()}`, 
+                    name: playerName || pendingEmail.split('@')[0],
+                    email: pendingEmail,
+                    avatar: null,
+                    preferredRole: null,
+                    otherRoles: [],
+                    claimed: true,
+                    isAdmin: isAdmin
+                };
                 
                 await storage.updateUser(newUser);
                 
@@ -1447,7 +1457,7 @@ function App() {
                 storage.setCurrentUser(null);
             };
 
-const handleVoteSubmit = async (playerId, ratings) => {
+            const handleVoteSubmit = async (playerId, ratings) => {
                 const newVote = { 
                     voterId: currentUser.id, 
                     voterName: currentUser.name,
@@ -1464,7 +1474,7 @@ const handleVoteSubmit = async (playerId, ratings) => {
                 setSelectedPlayer(null);
             };
 
-const handleAvatarUpdate = async (avatarUrl) => {
+            const handleAvatarUpdate = async (avatarUrl) => {
                 const updatedCurrentUser = { ...currentUser, avatar: avatarUrl };
                 
                 await storage.updateUser(updatedCurrentUser);
@@ -1475,7 +1485,7 @@ const handleAvatarUpdate = async (avatarUrl) => {
                 storage.setCurrentUser(updatedCurrentUser);
             };
 
-const handleRolesSave = async (preferredRole, otherRoles) => {
+            const handleRolesSave = async (preferredRole, otherRoles) => {
                 const updatedCurrentUser = { ...currentUser, preferredRole, otherRoles };
                 
                 await storage.updateUser(updatedCurrentUser);
@@ -1487,7 +1497,7 @@ const handleRolesSave = async (preferredRole, otherRoles) => {
                 setShowRoleModal(false);
             };
 
-if (loading) {
+            if (loading) {
                 return (
                     <div className="login-container">
                         <div className="login-card">
@@ -1496,7 +1506,7 @@ if (loading) {
                         </div>
                     </div>
                 );
-}
+            }
 
             if (!currentUser) {
                 return (
@@ -1544,6 +1554,9 @@ if (loading) {
                 </div>
             );
         }
+
+        // Avvia l'applicazione
+        ReactDOM.render(<App />, document.getElementById('root'));
 
         // Avvia l'applicazione
 try {
