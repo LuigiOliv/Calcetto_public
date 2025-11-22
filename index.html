@@ -1534,21 +1534,40 @@ const handleGoogleLogin = () => {
                 setEditingVotes(player);
             };
 
-            const handleSaveVotes = () => {
-                let updatedVotes = votes.filter(v => v.playerId !== editingVotes.id);
+ const handleSaveVotes = async () => {
+                // 1. Elimina tutti i voti seed esistenti per questo giocatore
+                const snapshot = await db.collection('votes')
+                    .where('playerId', '==', editingVotes.id)
+                    .get();
+                
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    // Elimina solo i voti seed (non quelli reali degli utenti)
+                    if (doc.data().voterId && doc.data().voterId.startsWith('seed')) {
+                        batch.delete(doc.ref);
+                    }
+                });
+                await batch.commit();
+
+                // 2. Aggiungi i nuovi voti seed
                 for (let i = 0; i < 8; i++) {
-                    const seedVote = { voterId: `seed_admin_${i}`, playerId: editingVotes.id, ratings: {}, timestamp: Date.now() };
+                    const seedVote = { 
+                        voterId: `seed_admin_${i}_${Date.now()}`, 
+                        playerId: editingVotes.id, 
+                        ratings: {}, 
+                        timestamp: Date.now() 
+                    };
                     [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => {
                         const value = parseFloat(voteValues[skill]);
-                        if (!isNaN(value)) seedVote.ratings[skill] = Math.round(value);
+                        if (!isNaN(value)) seedVote.ratings[skill] = value;
                     });
-                    updatedVotes.push(seedVote);
+                    await storage.addVote(seedVote);
                 }
-                setVotes(updatedVotes);
-                storage.setVotes(updatedVotes);
+
                 setEditingVotes(null);
                 setVoteValues({});
                 showSuccessMsg('Valutazioni aggiornate!');
+                setTimeout(() => window.location.reload(), 1000);
             };
 
             const handleResetVotes = (playerId) => {
