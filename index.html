@@ -43,8 +43,14 @@
 
         // Email dell'amministratore
         const ADMIN_EMAIL = 'luigi.oliviero@gmail.com';
-
-        // Le 15 skill divise per categoria
+		
+		// Giocatori che hanno già votato i 18 iniziali
+        const PLAYERS_ALREADY_VOTED = ['Luigi O.', 'Fabio C.', 'Valerio C.', 'Augusto DC'];
+        
+        // ID dei 18 giocatori iniziali (non votabili da chi ha già votato)
+        const INITIAL_PLAYER_IDS = ['player1', 'player2', 'player3', 'player4', 'player5', 'player6', 'player7', 'player8', 'player9', 'player10', 'player11', 'player12', 'player13', 'player14', 'player15', 'player16', 'player17', 'player18'];
+        
+		// Le 15 skill divise per categoria
         const SKILLS = {
             tecniche: ['Tiro', 'Passaggio corto', 'Passaggio lungo', 'Contrasto', 'Controllo'],
             tattiche: ['Visione di gioco', 'Senso della posizione', 'Spirito di sacrificio', 'Letture difensive', 'Costruzione'],
@@ -401,13 +407,16 @@
    ========================================================================== */
 
         function PlayersListPage({ users, currentUser, votes, onSelectPlayer }) {
-            const otherPlayers = users.filter(u => 
-                u.id !== currentUser.id && !u.id.startsWith('seed')
-            );
-            
-            const hasVoted = (playerId) => {
+			const hasVoted = (playerId) => {
                 return votes.some(v => v.voterId === currentUser.id && v.playerId === playerId);
             };
+
+            // Mostra solo giocatori non ancora votati (escludi se stesso e seed)
+            const playersToVote = users.filter(u => 
+                u.id !== currentUser.id && 
+                !u.id.startsWith('seed') && 
+                !hasVoted(u.id)
+            );
 
             return (
                 <div>
@@ -415,15 +424,12 @@
                         Seleziona un giocatore da valutare
                     </h2>
                     <div className="players-grid">
-                        {otherPlayers.map(player => (
+{playersToVote.map(player => (
                             <div 
                                 key={player.id}
                                 className="player-card"
                                 onClick={() => !hasVoted(player.id) && onSelectPlayer(player.id)}
-                                style={{
-                                    opacity: hasVoted(player.id) ? 0.6 : 1,
-                                    cursor: hasVoted(player.id) ? 'default' : 'pointer'
-                                }}
+								style={{cursor: 'pointer'}}
                             >
                                 <div className="avatar">
                                     {player.avatar ? (
@@ -433,8 +439,8 @@
                                     )}
                                 </div>
                                 <h3>{player.name}</h3>
-                                <div className={`status ${hasVoted(player.id) ? 'voted' : ''}`}>
-                                    {hasVoted(player.id) ? '✓ Già votato' : 'Clicca per valutare'}
+<div className="status">
+                                    Clicca per valutare
                                 </div>
                             </div>
                         ))}
