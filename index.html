@@ -348,12 +348,13 @@
                             </div>
                         </div>
 
-                        <button 
-                            className="btn btn-primary" 
+<button 
+                            className={`btn btn-primary ${(!preferredRole || otherRoles.length < 2) ? 'btn-disabled' : ''}`}
                             onClick={handleSubmit}
+                            disabled={!preferredRole || otherRoles.length < 2}
                             style={{width: '100%', marginTop: '20px'}}
                         >
-                            Conferma
+                            Conferma {otherRoles.length < 2 && preferredRole ? `(${otherRoles.length}/2 ruoli)` : ''}
                         </button>
                     </div>
                 </div>
