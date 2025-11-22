@@ -411,13 +411,22 @@
                 return votes.some(v => v.voterId === currentUser.id && v.playerId === playerId);
             };
 
-            // Mostra solo giocatori non ancora votati (escludi se stesso e seed)
-            const playersToVote = users.filter(u => 
-                u.id !== currentUser.id && 
-                !u.id.startsWith('seed') && 
-                !hasVoted(u.id)
-            );
+            // Controlla se l'utente ha già votato i 18 iniziali (offline)
+            const hasAlreadyVotedInitial = PLAYERS_ALREADY_VOTED.includes(currentUser.name);
 
+            // Mostra solo giocatori non ancora votati
+            const playersToVote = users.filter(u => {
+                // Escludi se stesso e seed
+                if (u.id === currentUser.id || u.id.startsWith('seed')) return false;
+                
+                // Escludi già votati nell'app
+                if (hasVoted(u.id)) return false;
+                
+                // Se ha già votato i 18 iniziali offline, escludi anche quelli
+                if (hasAlreadyVotedInitial && INITIAL_PLAYER_IDS.includes(u.id)) return false;
+                
+                return true;
+            });
             return (
                 <div>
                     <h2 style={{marginBottom: '30px', color: '#2d3748'}}>
