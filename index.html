@@ -301,7 +301,7 @@ firebase.initializeApp(firebaseConfig);
                             ✓ Sono io!
                         </button>
 
-                        <div style={{
+						<div style={{
                             borderTop: '1px solid #e2e8f0',
                             paddingTop: '20px',
                             marginTop: '10px',
@@ -310,10 +310,25 @@ firebase.initializeApp(firebaseConfig);
                             <p style={{color: '#718096', fontSize: '14px', marginBottom: '15px'}}>
                                 Non trovi il tuo nome?
                             </p>
+                            <input 
+                                type="text"
+                                placeholder="Scrivi il tuo nome e cognome"
+                                value={newPlayerName}
+                                onChange={(e) => setNewPlayerName(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    border: '2px solid #e2e8f0',
+                                    marginBottom: '15px',
+                                    fontSize: '16px'
+                                }}
+                            />
                             <button 
                                 className="btn btn-secondary"
-                                onClick={onNewPlayer}
-                                style={{width: '100%'}}
+                                onClick={() => onNewPlayer(newPlayerName)}
+                                style={{width: '100%', opacity: newPlayerName.trim() ? 1 : 0.5}}
+                                disabled={!newPlayerName.trim()}
                             >
                                 + Sono un nuovo giocatore
                             </button>
