@@ -13,31 +13,20 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-	<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-  
+<!-- Firebase Compat (funziona senza modules) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyC_81ukybf3QOFFvJcgDWMgbor4Z7k1bgI",
     authDomain: "calcetto-af1e0.firebaseapp.com",
     projectId: "calcetto-af1e0",
     storageBucket: "calcetto-af1e0.firebasestorage.app",
     messagingSenderId: "1035881443344",
-    appId: "1:1035881443344:web:2690813dc00bce70d19a95",
-    measurementId: "G-860CG0BR57"
+    appId: "1:1035881443344:web:2690813dc00bce70d19a95"
   };
   
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-  
-  // Rendi disponibili globalmente
-  window.firebaseAuth = auth;
-  window.firebaseProvider = provider;
-  window.firebaseSignInWithPopup = signInWithPopup;
-  window.firebaseSignOut = signOut;
-  window.firebaseOnAuthStateChanged = onAuthStateChanged;
+  firebase.initializeApp(firebaseConfig);
 </script>
 </head>
 <body>
@@ -175,18 +164,21 @@
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState('');
 
-            const handleGoogleLogin = async () => {
+            const handleGoogleLogin = () => {
                 setLoading(true);
                 setError('');
-                try {
-                    const result = await window.firebaseSignInWithPopup(window.firebaseAuth, window.firebaseProvider);
-                    const email = result.user.email;
-                    onLogin(email);
-                } catch (err) {
-                    console.error(err);
-                    setError('Errore di login: ' + err.message);
-                }
-                setLoading(false);
+                
+                const provider = new firebase.auth.GoogleAuthProvider();
+                
+                firebase.auth().signInWithPopup(provider)
+                    .then((result) => {
+                        onLogin(result.user.email);
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        setError('Errore: ' + err.message);
+                        setLoading(false);
+                    });
             };
 
             return (
@@ -195,7 +187,7 @@
                         <h1>⚽ Calcetto Rating</h1>
                         <p>Valuta i tuoi compagni di squadra</p>
                         
-                        {error && <p style={{color: '#e53e3e', marginBottom: '20px'}}>{error}</p>}
+                        {error && <p style={{color: '#e53e3e', marginBottom: '20px', fontSize: '14px'}}>{error}</p>}
                         
                         <button 
                             className="google-btn" 
