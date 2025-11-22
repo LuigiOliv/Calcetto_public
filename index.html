@@ -148,7 +148,9 @@
             countVotes: (playerId, votes) => {
                 return votes.filter(v => v.playerId === playerId).length;
             },
-            
+            toBase10: (value) => {
+                return (value / 4) * 10;
+            },
             getInitials: (name) => {
                 return name.substring(0, 2).toUpperCase();
             }
@@ -562,8 +564,8 @@
                         labels: labels,
                         datasets: [{
                             label: category.charAt(0).toUpperCase() + category.slice(1),
-                            data: labels.map(label => data[label]),
-                            backgroundColor: colors[category],
+							data: labels.map(label => utils.toBase10(data[label])),
+							backgroundColor: colors[category],
                             borderColor: borderColors[category],
                             borderWidth: 2,
                             pointBackgroundColor: borderColors[category],
@@ -576,9 +578,9 @@
                         scales: {
                             r: {
                                 beginAtZero: true,
-                                max: 4,
+                                max: 10,
                                 min: 0,
-                                ticks: { stepSize: 1 }
+                                ticks: { stepSize: 2 }
                             }
                         },
                         plugins: { legend: { display: false } }
@@ -627,7 +629,7 @@
 
                     {hasEnoughVotes && overall && (
                         <div className="overall-container">
-                            <div className="overall-main">{overall.toFixed(1)}</div>
+                            <div className="overall-main">{utils.toBase10(overall).toFixed(2)}</div>
                             <div className="overall-label">Overall</div>
                         </div>
                     )}
@@ -667,8 +669,8 @@
                                         </h3>
                                         {catOverall && (
                                             <div className="category-overall">
-                                                {catOverall.toFixed(2)}
-                                            </div>
+                                            {utils.toBase10(catOverall).toFixed(2)}
+                                        </div>
                                         )}
                                         <RadarChart 
                                             data={averages}
@@ -759,7 +761,7 @@
                                         <div style={{fontWeight: '600', fontSize: '18px'}}>{player.name}</div>
                                         <div style={{fontSize: '13px', opacity: 0.8}}>{player.voteCount} valutazioni</div>
                                     </div>
-                                    <div style={{fontWeight: '800', fontSize: '28px'}}>{player.overall.toFixed(2)}</div>
+                                    <div style={{fontWeight: '800', fontSize: '28px'}}>{utils.toBase10(player.overall).toFixed(2)}</div>
                                 </div>
                             ))}
                         </div>
