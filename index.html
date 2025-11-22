@@ -681,7 +681,45 @@
                                 );
                             })}
                         </div>
-                    ) : (
+{/* Tabella riepilogativa */}
+                        <div style={{marginTop: '40px'}}>
+                            <h3 style={{color: '#2d3748', marginBottom: '20px', textAlign: 'center'}}>📋 Dettaglio Valutazioni</h3>
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
+                                {Object.entries(SKILLS).map(([category, skills]) => (
+                                    <div key={category} style={{background: '#f7fafc', borderRadius: '12px', padding: '20px'}}>
+                                        <h4 style={{
+                                            color: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565',
+                                            marginBottom: '15px',
+                                            textTransform: 'capitalize',
+                                            borderBottom: '2px solid',
+                                            borderColor: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565',
+                                            paddingBottom: '10px'
+                                        }}>
+                                            {category}
+                                        </h4>
+                                        {skills.map(skill => (
+                                            <div key={skill} style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                padding: '8px 0',
+                                                borderBottom: '1px solid #e2e8f0'
+                                            }}>
+                                                <span style={{fontSize: '14px', color: '#4a5568'}}>{skill}</span>
+                                                <span style={{
+                                                    fontWeight: '700',
+                                                    fontSize: '16px',
+                                                    color: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565'
+                                                }}>
+                                                    {averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+				) : (
                         <div className="no-votes">
                             <h3>📊 Grafici non disponibili</h3>
                             <p>
