@@ -16,6 +16,7 @@
 <!-- Firebase Compat (funziona senza modules) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>	
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyC_81ukybf3QOFFvJcgDWMgbor4Z7k1bgI",
@@ -26,7 +27,8 @@
     appId: "1:1035881443344:web:2690813dc00bce70d19a95"
   };
   
-  firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 </script>
 </head>
 <body>
@@ -93,21 +95,56 @@
         ];
 
 /* ============================================================================
-   SEZIONE 2: STORAGE (localStorage)
+   SEZIONE 2: STORAGE (Firestore)
    ============================================================================
-   Funzioni per salvare e recuperare dati dal browser
+   Funzioni per salvare e recuperare dati dal cloud
    ========================================================================== */
 
         const storage = {
-            getUsers: () => JSON.parse(localStorage.getItem('calcetto_users') || '[]'),
-            setUsers: (users) => localStorage.setItem('calcetto_users', JSON.stringify(users)),
-            getVotes: () => JSON.parse(localStorage.getItem('calcetto_votes') || '[]'),
-            setVotes: (votes) => localStorage.setItem('calcetto_votes', JSON.stringify(votes)),
+            // USERS
+            getUsers: async () => {
+                const snapshot = await db.collection('users').get();
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            },
+            
+            setUsers: async (users) => {
+                const batch = db.batch();
+                users.forEach(user => {
+                    const ref = db.collection('users').doc(user.id);
+                    batch.set(ref, user);
+                });
+                await batch.commit();
+            },
+            
+            updateUser: async (user) => {
+                await db.collection('users').doc(user.id).set(user);
+            },
+            
+            // VOTES
+            getVotes: async () => {
+                const snapshot = await db.collection('votes').get();
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            },
+            
+            addVote: async (vote) => {
+                await db.collection('votes').add(vote);
+            },
+            
+            setVotes: async (votes) => {
+                const batch = db.batch();
+                votes.forEach((vote, index) => {
+                    const ref = db.collection('votes').doc(`vote_${Date.now()}_${index}`);
+                    batch.set(ref, vote);
+                });
+                await batch.commit();
+            },
+            
+            // CURRENT USER (resta in localStorage - è il login locale)
             getCurrentUser: () => JSON.parse(localStorage.getItem('calcetto_current_user') || 'null'),
             setCurrentUser: (user) => localStorage.setItem('calcetto_current_user', JSON.stringify(user)),
+            
+            // CLEAR
             clearAll: () => {
-                localStorage.removeItem('calcetto_users');
-                localStorage.removeItem('calcetto_votes');
                 localStorage.removeItem('calcetto_current_user');
             }
         };
@@ -1268,28 +1305,48 @@
    ⚠️ ATTENZIONE: Modificare con cautela!
    ========================================================================== */
 
-        function App() {
+function App() {
             const [currentUser, setCurrentUser] = useState(storage.getCurrentUser());
             const [activeTab, setActiveTab] = useState('valuta');
             const [selectedPlayer, setSelectedPlayer] = useState(null);
             const [viewingProfile, setViewingProfile] = useState(null);
-            const [users, setUsers] = useState(storage.getUsers());
-            const [votes, setVotes] = useState(storage.getVotes());
+            const [users, setUsers] = useState([]);
+            const [votes, setVotes] = useState([]);
             const [showRoleModal, setShowRoleModal] = useState(false);
             const [showClaimModal, setShowClaimModal] = useState(false);
             const [pendingEmail, setPendingEmail] = useState(null);
+            const [loading, setLoading] = useState(true);
 
+            // Carica dati da Firestore all'avvio
             useEffect(() => {
-                if (users.length === 0) {
-                    const initialUsers = INITIAL_PLAYERS.map(p => ({
-                        ...p,
-                        email: p.email || null,
-                        claimed: p.claimed || false,
-                        isAdmin: p.isAdmin || false
-                    }));
-                    setUsers(initialUsers);
-                    storage.setUsers(initialUsers);
-                }
+                const loadData = async () => {
+                    setLoading(true);
+                    try {
+                        let loadedUsers = await storage.getUsers();
+                        
+                        // Se non ci sono utenti, inizializza con i giocatori iniziali
+                        if (loadedUsers.length === 0) {
+                            const initialUsers = INITIAL_PLAYERS.map(p => ({
+                                ...p,
+                                email: p.email || null,
+                                claimed: p.claimed || false,
+                                isAdmin: p.isAdmin || false
+                            }));
+                            await storage.setUsers(initialUsers);
+                            loadedUsers = initialUsers;
+                        }
+                        
+                        const loadedVotes = await storage.getVotes();
+                        
+                        setUsers(loadedUsers);
+                        setVotes(loadedVotes);
+                    } catch (error) {
+                        console.error('Errore caricamento dati:', error);
+                    }
+                    setLoading(false);
+                };
+                
+                loadData();
             }, []);
 
             const handleLogin = (email) => {
@@ -1305,12 +1362,14 @@
                 }
             };
 
-            const handleClaimProfile = (playerId) => {
+				const handleClaimProfile = async (playerId) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
-                const updatedUsers = users.map(u => u.id === playerId ? { ...u, email: pendingEmail, claimed: true, isAdmin } : u);
+                const claimedUser = { ...users.find(u => u.id === playerId), email: pendingEmail, claimed: true, isAdmin };
+                
+                await storage.updateUser(claimedUser);
+                
+                const updatedUsers = users.map(u => u.id === playerId ? claimedUser : u);
                 setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
-                const claimedUser = updatedUsers.find(u => u.id === playerId);
                 setCurrentUser(claimedUser);
                 storage.setCurrentUser(claimedUser);
                 setShowClaimModal(false);
@@ -1318,12 +1377,13 @@
                 if (!claimedUser.preferredRole) setShowRoleModal(true);
             };
 
-            const handleNewPlayer = () => {
+const handleNewPlayer = async () => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
-                const newUser = { id: `player${users.length + 1}`, name: pendingEmail.split('@')[0], email: pendingEmail, avatar: null, preferredRole: null, otherRoles: [], claimed: true, isAdmin };
-                const updatedUsers = [...users, newUser];
-                setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
+                const newUser = { id: `player${Date.now()}`, name: pendingEmail.split('@')[0], email: pendingEmail, avatar: null, preferredRole: null, otherRoles: [], claimed: true, isAdmin };
+                
+                await storage.updateUser(newUser);
+                
+                setUsers([...users, newUser]);
                 setCurrentUser(newUser);
                 storage.setCurrentUser(newUser);
                 setShowClaimModal(false);
@@ -1336,35 +1396,48 @@
                 storage.setCurrentUser(null);
             };
 
-            const handleVoteSubmit = (playerId, ratings) => {
+const handleVoteSubmit = async (playerId, ratings) => {
                 const newVote = { voterId: currentUser.id, playerId, ratings, timestamp: Date.now() };
-                const updatedVotes = [...votes, newVote];
-                setVotes(updatedVotes);
-                storage.setVotes(updatedVotes);
+                
+                await storage.addVote(newVote);
+                
+                setVotes([...votes, newVote]);
                 setSelectedPlayer(null);
             };
 
-            const handleAvatarUpdate = (avatarUrl) => {
-                const updatedUsers = users.map(u => u.id === currentUser.id ? { ...u, avatar: avatarUrl } : u);
-                setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
+const handleAvatarUpdate = async (avatarUrl) => {
                 const updatedCurrentUser = { ...currentUser, avatar: avatarUrl };
+                
+                await storage.updateUser(updatedCurrentUser);
+                
+                const updatedUsers = users.map(u => u.id === currentUser.id ? updatedCurrentUser : u);
+                setUsers(updatedUsers);
                 setCurrentUser(updatedCurrentUser);
                 storage.setCurrentUser(updatedCurrentUser);
             };
 
-            const handleRolesSave = (preferredRole, otherRoles) => {
-                const updatedUsers = users.map(u => u.id === currentUser.id ? { ...u, preferredRole, otherRoles } : u);
-                setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
+const handleRolesSave = async (preferredRole, otherRoles) => {
                 const updatedCurrentUser = { ...currentUser, preferredRole, otherRoles };
+                
+                await storage.updateUser(updatedCurrentUser);
+                
+                const updatedUsers = users.map(u => u.id === currentUser.id ? updatedCurrentUser : u);
+                setUsers(updatedUsers);
                 setCurrentUser(updatedCurrentUser);
                 storage.setCurrentUser(updatedCurrentUser);
                 setShowRoleModal(false);
             };
 
-            if (!currentUser) {
+if (loading) {
                 return (
+                    <div className="login-container">
+                        <div className="login-card">
+                            <h1>⚽ Calcetto Rating</h1>
+                            <p>Caricamento in corso...</p>
+                        </div>
+                    </div>
+                );
+            }
                     <>
                         <LoginPage onLogin={handleLogin} />
                         {showClaimModal && <ClaimProfileModal users={users} onClaim={handleClaimProfile} onNewPlayer={handleNewPlayer} />}
