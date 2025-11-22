@@ -909,7 +909,6 @@ const handleGoogleLogin = () => {
         function SettingsPage({ user, onAvatarUpdate }) {
             const [showSuccess, setShowSuccess] = useState(false);
             const [showRoleEdit, setShowRoleEdit] = useState(false);
-	    const [showImport, setShowImport] = useState(false);
 
             const handleFileChange = (e) => {
                 const file = e.target.files[0];
@@ -974,20 +973,7 @@ const handleGoogleLogin = () => {
                             </button>
                         </div>
                     </div>
-		    <div className="settings-group">
-                        <h3>Importa Dati CSV</h3>
-                        <div style={{background: '#f7fafc', padding: '20px', borderRadius: '10px'}}>
-                            <p style={{color: '#718096', marginBottom: '15px'}}>Importa valutazioni da file CSV</p>
-                            <button className="btn btn-primary" onClick={() => setShowImport(true)}>📁 Importa CSV</button>
-                        </div>
-                    </div>
 
-                    {showImport && (
-                        <CSVImportModal 
-                            onClose={() => setShowImport(false)}
-                            onSuccess={() => { setShowImport(false); setShowSuccess(true); setTimeout(() => window.location.reload(), 1000); }}
-                        />
-                    )}
                     {showSuccess && <div className="success-message">✓ Impostazioni aggiornate!</div>}
 
                     {showRoleEdit && (
@@ -1165,6 +1151,7 @@ const handleGoogleLogin = () => {
             const [successMessage, setSuccessMessage] = useState('');
             const [editingVotes, setEditingVotes] = useState(null);
             const [voteValues, setVoteValues] = useState({});
+			const [showImport, setShowImport] = useState(false);
 
             const showSuccessMsg = (msg) => {
                 setSuccessMessage(msg);
@@ -1337,8 +1324,23 @@ const handleGoogleLogin = () => {
                 </div>
             );
         }
+<div className="settings-group" style={{marginTop: '40px'}}>
+                        <h3>📁 Importa Dati</h3>
+                        <div style={{background: '#f7fafc', padding: '20px', borderRadius: '10px'}}>
+                            <p style={{color: '#718096', marginBottom: '15px'}}>Importa valutazioni da file CSV</p>
+                            <button className="btn btn-primary" onClick={() => setShowImport(true)}>📁 Importa CSV</button>
+                        </div>
+                    </div>
 
-/* ============================================================================
+                    {showImport && (
+                        <CSVImportModal 
+                            onClose={() => setShowImport(false)}
+                            onSuccess={() => { setShowImport(false); showSuccessMsg('Dati importati!'); setTimeout(() => window.location.reload(), 1000); }}
+                        />
+                    )}
+
+		
+	/* ============================================================================
    SEZIONE 15: COMPONENTE APP (PRINCIPALE)
    ============================================================================
    Gestisce stato globale, autenticazione e navigazione
