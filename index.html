@@ -657,6 +657,7 @@
                     )}
 
                     {hasEnoughVotes && averages ? (
+					<>
                         <div className="charts-container">
                             {Object.entries(SKILLS).map(([category, skills]) => {
                                 const catOverall = utils.calculateCategoryOverall(averages, category);
@@ -682,7 +683,7 @@
                                 );
                             })}
                         </div>
-/* Tabella riepilogativa */
+ 		{ /* Tabella riepilogativa */ }
                         <div style={{marginTop: '40px'}}>
                             <h3 style={{color: '#2d3748', marginBottom: '20px', textAlign: 'center'}}>📋 Dettaglio Valutazioni</h3>
                             <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
@@ -716,11 +717,12 @@
                                                 </span>
                                             </div>
                                         ))}
-                                    </div>
+									</div>
                                 ))}
                             </div>
                         </div>
-				) : (
+                        </>
+                    ) : (
                         <div className="no-votes">
                             <h3>📊 Grafici non disponibili</h3>
                             <p>
