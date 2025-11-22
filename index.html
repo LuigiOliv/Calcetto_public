@@ -1437,7 +1437,10 @@ if (loading) {
                         </div>
                     </div>
                 );
-            }
+}
+
+            if (!currentUser) {
+                return (
                     <>
                         <LoginPage onLogin={handleLogin} />
                         {showClaimModal && <ClaimProfileModal users={users} onClaim={handleClaimProfile} onNewPlayer={handleNewPlayer} />}
