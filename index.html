@@ -32,7 +32,14 @@ firebase.initializeApp(firebaseConfig);
 </script>
 </head>
 <body>
-    <div id="root"></div>
+<div id="root">
+    <div style="display:flex;justify-content:center;align-items:center;min-height:100vh;">
+        <div style="background:white;padding:40px;border-radius:20px;text-align:center;">
+            <h2>⚽ Caricamento...</h2>
+            <p>Se rimani bloccato qui, prova a ricaricare la pagina</p>
+        </div>
+    </div>
+</div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
@@ -1520,7 +1527,11 @@ if (loading) {
         }
 
         // Avvia l'applicazione
-        ReactDOM.render(<App />, document.getElementById('root'));
+try {
+            ReactDOM.render(<App />, document.getElementById('root'));
+        } catch (error) {
+            document.getElementById('root').innerHTML = '<div style="color:white;text-align:center;padding:50px;"><h2>Errore caricamento</h2><p>' + error.message + '</p></div>';
+        }
 
     </script>
 </body>
