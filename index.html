@@ -1694,7 +1694,164 @@ const handleGoogleLogin = () => {
             );
         }
 
+/* ============================================================================
+   SEZIONE 14B: COMPONENTE DEBUG PAGE
+   ============================================================================
+   Pannello di debugging per verificare voti e calcoli
+   ========================================================================== */
 
+        function DebugPage({ users, votes }) {
+            const getVoteStats = (playerId) => {
+                const playerVotes = votes.filter(v => v.playerId === playerId);
+                const seedVotes = playerVotes.filter(v => v.voterId && v.voterId.startsWith('seed'));
+                const realVotes = playerVotes.filter(v => v.voterId && !v.voterId.startsWith('seed'));
+                
+                return {
+                    total: playerVotes.length,
+                    seed: seedVotes.length,
+                    real: realVotes.length
+                };
+            };
+
+            const players = users.filter(u => !u.id.startsWith('seed'));
+
+            return (
+                <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+                    <h2 style={{marginBottom: '30px', color: '#2d3748'}}>🐛 Debug - Riepilogo Voti</h2>
+
+                    <div style={{
+                        background: '#f7fafc',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        marginBottom: '30px'
+                    }}>
+                        <h3 style={{marginBottom: '20px'}}>📊 Statistiche Globali</h3>
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
+                            <div style={{background: 'white', padding: '20px', borderRadius: '10px', textAlign: 'center'}}>
+                                <div style={{fontSize: '36px', fontWeight: '700', color: '#667eea'}}>
+                                    {votes.filter(v => v.voterId && v.voterId.startsWith('seed')).length}
+                                </div>
+                                <div style={{color: '#718096', marginTop: '5px'}}>Voti Seed Totali</div>
+                            </div>
+                            <div style={{background: 'white', padding: '20px', borderRadius: '10px', textAlign: 'center'}}>
+                                <div style={{fontSize: '36px', fontWeight: '700', color: '#48bb78'}}>
+                                    {votes.filter(v => v.voterId && !v.voterId.startsWith('seed')).length}
+                                </div>
+                                <div style={{color: '#718096', marginTop: '5px'}}>Voti Reali Totali</div>
+                            </div>
+                            <div style={{background: 'white', padding: '20px', borderRadius: '10px', textAlign: 'center'}}>
+                                <div style={{fontSize: '36px', fontWeight: '700', color: '#f56565'}}>
+                                    {votes.length}
+                                </div>
+                                <div style={{color: '#718096', marginTop: '5px'}}>Voti Totali</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        background: '#f7fafc',
+                        borderRadius: '12px',
+                        padding: '20px'
+                    }}>
+                        <h3 style={{marginBottom: '20px'}}>👥 Dettaglio per Giocatore</h3>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                            gap: '10px',
+                            padding: '15px',
+                            background: '#2d3748',
+                            color: 'white',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            marginBottom: '10px'
+                        }}>
+                            <div>Giocatore</div>
+                            <div style={{textAlign: 'center'}}>Voti Seed</div>
+                            <div style={{textAlign: 'center'}}>Voti Reali</div>
+                            <div style={{textAlign: 'center'}}>Totale</div>
+                            <div style={{textAlign: 'center'}}>Overall</div>
+                        </div>
+
+                        {players.map(player => {
+                            const stats = getVoteStats(player.id);
+                            const averages = utils.calculateAverages(player.id, votes);
+                            const overall = utils.calculateOverall(averages);
+                            
+                            return (
+                                <div 
+                                    key={player.id}
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                                        gap: '10px',
+                                        padding: '15px',
+                                        background: 'white',
+                                        borderRadius: '8px',
+                                        marginBottom: '8px',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <div style={{fontWeight: '600', color: '#2d3748'}}>
+                                        {player.name}
+                                        <span style={{color: '#a0aec0', fontSize: '12px', marginLeft: '8px'}}>
+                                            ({player.id})
+                                        </span>
+                                    </div>
+                                    <div style={{
+                                        textAlign: 'center',
+                                        color: '#667eea',
+                                        fontWeight: '600',
+                                        fontSize: '18px'
+                                    }}>
+                                        {stats.seed}
+                                    </div>
+                                    <div style={{
+                                        textAlign: 'center',
+                                        color: '#48bb78',
+                                        fontWeight: '600',
+                                        fontSize: '18px'
+                                    }}>
+                                        {stats.real}
+                                    </div>
+                                    <div style={{
+                                        textAlign: 'center',
+                                        color: '#2d3748',
+                                        fontWeight: '700',
+                                        fontSize: '20px'
+                                    }}>
+                                        {stats.total}
+                                    </div>
+                                    <div style={{
+                                        textAlign: 'center',
+                                        color: overall ? '#f56565' : '#a0aec0',
+                                        fontWeight: '700',
+                                        fontSize: '18px'
+                                    }}>
+                                        {overall ? utils.toBase10(overall).toFixed(2) : '-'}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div style={{
+                        background: '#fff5f5',
+                        border: '2px solid #fc8181',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        marginTop: '30px'
+                    }}>
+                        <h3 style={{color: '#c53030', marginBottom: '10px'}}>⚠️ Note</h3>
+                        <ul style={{color: '#742a2a', lineHeight: '1.8'}}>
+                            <li><strong>Voti Seed:</strong> Voti inseriti dall'Admin (dovrebbero essere 8 per giocatore)</li>
+                            <li><strong>Voti Reali:</strong> Voti dati da altri utenti dell'app</li>
+                            <li><strong>Overall:</strong> Media di tutte le skill (scala 1-10)</li>
+                            <li>Se i voti seed sono diversi da 8, c'è un problema nel salvataggio Admin</li>
+                        </ul>
+                    </div>
+                </div>
+            );
+        }
 		
 	/* ============================================================================
    SEZIONE 15: COMPONENTE APP (PRINCIPALE)
@@ -1896,8 +2053,8 @@ const handleGoogleLogin = () => {
                         <button className={`nav-tab ${activeTab === 'profilo' ? 'active' : ''}`} onClick={() => { setActiveTab('profilo'); setSelectedPlayer(null); setViewingProfile(null); }}>👤 Profilo</button>
                         <button className={`nav-tab ${activeTab === 'classifiche' ? 'active' : ''}`} onClick={() => { setActiveTab('classifiche'); setSelectedPlayer(null); setViewingProfile(null); }}>📊 Classifiche</button>
                         <button className={`nav-tab ${activeTab === 'impostazioni' ? 'active' : ''}`} onClick={() => { setActiveTab('impostazioni'); setSelectedPlayer(null); setViewingProfile(null); }}>⚙️ Impostazioni</button>
-                        {currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => { setActiveTab('admin'); setSelectedPlayer(null); setViewingProfile(null); }} style={{background: activeTab === 'admin' ? 'linear-gradient(135deg, #e53e3e, #c53030)' : ''}}>🔧 Admin</button>}
-                    </div>
+{currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => { setActiveTab('admin'); setSelectedPlayer(null); setViewingProfile(null); }} style={{background: activeTab === 'admin' ? 'linear-gradient(135deg, #e53e3e, #c53030)' : ''}}>🔧 Admin</button>}
+{currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'debug' ? 'active' : ''}`} onClick={() => { setActiveTab('debug'); setSelectedPlayer(null); setViewingProfile(null); }} style={{background: activeTab === 'debug' ? 'linear-gradient(135deg, #f56565, #e53e3e)' : ''}}>🐛 Debug</button>}                    </div>
                     
                     <div className="content">
                         {viewingProfile ? (
@@ -1914,8 +2071,10 @@ const handleGoogleLogin = () => {
                         ) : activeTab === 'classifiche' ? (
                             <ClassifichePage users={users} votes={votes} onViewProfile={setViewingProfile} />
                         ) : activeTab === 'admin' && currentUser.isAdmin ? (
-                            <AdminPage users={users} setUsers={setUsers} votes={votes} setVotes={setVotes} />
-                        ) : (
+    <AdminPage users={users} setUsers={setUsers} votes={votes} setVotes={setVotes} />
+) : activeTab === 'debug' && currentUser.isAdmin ? (
+    <DebugPage users={users} votes={votes} />
+) : (
                             <SettingsPage 
                                 user={currentUser} 
                                 onUpdateUser={async (updatedUser) => {
