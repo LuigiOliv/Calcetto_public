@@ -1486,7 +1486,8 @@ const handleGoogleLogin = () => {
             const [successMessage, setSuccessMessage] = useState('');
             const [editingVotes, setEditingVotes] = useState(null);
             const [voteValues, setVoteValues] = useState({});
-			const [showImport, setShowImport] = useState(false);
+            const [showImport, setShowImport] = useState(false);
+            const [setupDone, setSetupDone] = useState(false);
 
             const showSuccessMsg = (msg) => {
                 setSuccessMessage(msg);
@@ -1494,29 +1495,65 @@ const handleGoogleLogin = () => {
                 setTimeout(() => setShowSuccess(false), 3000);
             };
 
+            const handleSetupDatabase = async () => {
+                if (!confirm('⚠️ Questa operazione imposta i campi nel database. Eseguire solo UNA volta. Continuare?')) return;
+                
+                try {
+                    // Lista dei 18 giocatori iniziali
+                    const initialPlayerIds = ['player1', 'player2', 'player3', 'player4', 'player5', 
+                                              'player6', 'player7', 'player8', 'player9', 'player10', 
+                                              'player11', 'player12', 'player13', 'player14', 'player15', 
+                                              'player16', 'player17', 'player18'];
+                    
+                    // Lista di chi ha votato offline
+                    const offlineVoters = ['Luigi O.', 'Augusto DC', 'Fabio C.', 'Valerio C.', 
+                                           'Antonio Travino', 'Nello DD', 'Gianmarco', 'Lino D.', 
+                                           'Antonio Acampora', 'Fabrizio B.', 'Zio Kekko'];
+                    
+                    // Aggiorna tutti gli utenti
+                    for (const user of users) {
+                        const isInitial = initialPlayerIds.includes(user.id);
+                        const hasVotedOffline = offlineVoters.includes(user.name);
+                        
+                        const updatedUser = {
+                            ...user,
+                            isInitialPlayer: isInitial,
+                            hasVotedOffline: hasVotedOffline
+                        };
+                        
+                        await storage.updateUser(updatedUser);
+                    }
+                    
+                    setSetupDone(true);
+                    showSuccessMsg('✅ Database configurato con successo!');
+                    setTimeout(() => window.location.reload(), 1500);
+                } catch (error) {
+                    alert('❌ Errore: ' + error.message);
+                }
+            };
+
             const handleEditName = (player) => {
                 setEditingPlayer(player.id);
                 setEditName(player.name);
             };
 
-            const handleSaveName = (playerId) => {
+            const handleSaveName = async (playerId) => {
                 if (!editName.trim()) return;
-                const updatedUsers = users.map(u => u.id === playerId ? { ...u, name: editName.trim() } : u);
+                const updatedUser = users.find(u => u.id === playerId);
+                updatedUser.name = editName.trim();
+                await storage.updateUser(updatedUser);
+                const updatedUsers = users.map(u => u.id === playerId ? updatedUser : u);
                 setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
                 setEditingPlayer(null);
                 setEditName('');
                 showSuccessMsg('Nome aggiornato!');
             };
 
-            const handleDeletePlayer = (playerId) => {
+            const handleDeletePlayer = async (playerId) => {
                 if (!confirm('Eliminare questo giocatore e tutte le sue valutazioni?')) return;
                 const updatedUsers = users.filter(u => u.id !== playerId);
                 setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
-                const updatedVotes = votes.filter(v => v.playerId !== playerId && v.voterId !== playerId);
-                setVotes(updatedVotes);
-                storage.setVotes(updatedVotes);
+                await storage.setUsers(updatedUsers);
                 showSuccessMsg('Giocatore eliminato!');
             };
 
@@ -1534,7 +1571,7 @@ const handleGoogleLogin = () => {
                 setEditingVotes(player);
             };
 
- const handleSaveVotes = async () => {
+            const handleSaveVotes = async () => {
                 // 1. Elimina tutti i voti seed esistenti per questo giocatore
                 const snapshot = await db.collection('votes')
                     .where('playerId', '==', editingVotes.id)
@@ -1572,19 +1609,26 @@ const handleGoogleLogin = () => {
 
             const handleResetVotes = (playerId) => {
                 if (!confirm('Eliminare tutte le valutazioni di questo giocatore?')) return;
-                const updatedVotes = votes.filter(v => v.playerId !== playerId);
-                setVotes(updatedVotes);
-                storage.setVotes(updatedVotes);
-                showSuccessMsg('Valutazioni resettate!');
+                showSuccessMsg('Funzione non disponibile con Firestore. Elimina manualmente dalla console Firebase.');
             };
 
-            const handleAddPlayer = () => {
+            const handleAddPlayer = async () => {
                 const newName = prompt('Nome del nuovo giocatore:');
                 if (!newName || !newName.trim()) return;
-                const newPlayer = { id: `player${Date.now()}`, name: newName.trim(), avatar: null, preferredRole: null, otherRoles: [], email: null, claimed: false, isAdmin: false };
-                const updatedUsers = [...users, newPlayer];
-                setUsers(updatedUsers);
-                storage.setUsers(updatedUsers);
+                const newPlayer = { 
+                    id: `player${users.length + 1}`, 
+                    name: newName.trim(), 
+                    avatar: null, 
+                    preferredRole: null, 
+                    otherRoles: [], 
+                    email: null, 
+                    claimed: false, 
+                    isAdmin: false,
+                    isInitialPlayer: false,
+                    hasVotedOffline: false
+                };
+                await storage.updateUser(newPlayer);
+                setUsers([...users, newPlayer]);
                 showSuccessMsg('Giocatore aggiunto!');
             };
 
@@ -1626,8 +1670,8 @@ const handleGoogleLogin = () => {
                                         ) : (
                                             <>
                                                 <span style={{fontWeight: '600', minWidth: '140px'}}>{player.name}</span>
-                                                <span style={{color: '#718096', fontSize: '13px', flex: 1}}>{player.claimed ? `✓ ${player.email}` : '○ Non reclamato'}</span>
-                                                <span style={{color: '#667eea', fontSize: '13px'}}>OVR: {overall ? overall.toFixed(2) : '-'} ({voteCount} voti)</span>
+                                                <span style={{color: '#718096', fontSize: '13px', flex: 1}}>{player.claimed ? `✓ ${player.email}` : '◯ Non reclamato'}</span>
+                                                <span style={{color: '#667eea', fontSize: '13px'}}>OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)</span>
                                                 <div style={{display: 'flex', gap: '6px'}}>
                                                     <button onClick={() => handleEditName(player)} style={{padding: '5px 10px', background: '#667eea', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '11px'}}>✏️</button>
                                                     <button onClick={() => handleEditVotes(player)} style={{padding: '5px 10px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '11px'}}>📊</button>
@@ -1641,12 +1685,12 @@ const handleGoogleLogin = () => {
                             })}
                         </div>
                     </div>
-					
-					<div className="settings-group" style={{marginTop: '40px'}}>
-                        <h3>📁 Importa Dati</h3>
+                    
+                    <div className="settings-group" style={{marginTop: '40px'}}>
+                        <h3>📊 Importa Dati</h3>
                         <div style={{background: '#f7fafc', padding: '20px', borderRadius: '10px'}}>
                             <p style={{color: '#718096', marginBottom: '15px'}}>Importa valutazioni da file CSV</p>
-                            <button className="btn btn-primary" onClick={() => setShowImport(true)}>📁 Importa CSV</button>
+                            <button className="btn btn-primary" onClick={() => setShowImport(true)}>📂 Importa CSV</button>
                         </div>
                     </div>
 
@@ -1656,7 +1700,24 @@ const handleGoogleLogin = () => {
                             onSuccess={() => { setShowImport(false); showSuccessMsg('Dati importati!'); setTimeout(() => window.location.reload(), 1000); }}
                         />
                     )}
-					
+
+                    <div className="settings-group" style={{marginTop: '40px'}}>
+                        <h3>🔧 Setup Database (esegui una sola volta)</h3>
+                        <div style={{background: '#f0fff4', padding: '20px', borderRadius: '10px', border: '2px solid #48bb78'}}>
+                            <p style={{color: '#2f855a', marginBottom: '15px'}}>
+                                Imposta i campi necessari nel database (isInitialPlayer, hasVotedOffline)
+                            </p>
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleSetupDatabase}
+                                disabled={setupDone}
+                                style={{opacity: setupDone ? 0.5 : 1}}
+                            >
+                                {setupDone ? '✅ Setup completato' : '🚀 Esegui Setup Database'}
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="settings-group" style={{marginTop: '40px'}}>
                         <h3 style={{color: '#e53e3e'}}>⚠️ Zona Pericolosa</h3>
                         <div style={{background: '#fff5f5', padding: '20px', borderRadius: '10px', border: '2px solid #fc8181'}}>
@@ -1693,7 +1754,6 @@ const handleGoogleLogin = () => {
                 </div>
             );
         }
-
 /* ============================================================================
    SEZIONE 14B: COMPONENTE DEBUG PAGE
    ============================================================================
