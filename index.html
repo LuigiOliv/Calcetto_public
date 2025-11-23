@@ -47,19 +47,13 @@ firebase.initializeApp(firebaseConfig);
 /* ============================================================================
    SEZIONE 1: CONFIGURAZIONE
    ============================================================================
-   Modifica qui per: aggiungere giocatori, cambiare skill, cambiare ruoli
+   Modifica qui per: cambiare skill, cambiare ruoli
    ========================================================================== */
 
         // Email dell'amministratore
         const ADMIN_EMAIL = 'luigi.oliviero@gmail.com';
-		
-		// Giocatori che hanno già votato i 18 iniziali
-        const PLAYERS_ALREADY_VOTED = ['Luigi O.', 'Fabio C.', 'Valerio C.', 'Augusto DC'];
-        
-        // ID dei 18 giocatori iniziali (non votabili da chi ha già votato)
-        const INITIAL_PLAYER_IDS = ['player1', 'player2', 'player3', 'player4', 'player5', 'player6', 'player7', 'player8', 'player9', 'player10', 'player11', 'player12', 'player13', 'player14', 'player15', 'player16', 'player17', 'player18'];
-        
-		// Le 15 skill divise per categoria
+
+        // Le 15 skill divise per categoria
         const SKILLS = {
             tecniche: ['Tiro', 'Passaggio corto', 'Passaggio lungo', 'Contrasto', 'Controllo'],
             tattiche: ['Visione di gioco', 'Senso della posizione', 'Spirito di sacrificio', 'Letture difensive', 'Costruzione'],
@@ -77,28 +71,6 @@ firebase.initializeApp(firebaseConfig);
             'Mezzala sx',
             'Mezzala dx',
             'Centravanti'
-        ];
-
-        // I 18 giocatori
-        const INITIAL_PLAYERS = [
-            { id: 'player1', name: 'Ceppe P.', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player2', name: 'Zio Kekko', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player3', name: 'Antonio Nocerino', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player4', name: 'Lino D.', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player5', name: 'Antonio Travino', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player6', name: 'Fabrizio B.', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player7', name: 'Gianmarco', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player8', name: 'Claudio', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player9', name: 'Carmine', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player10', name: 'Salvio Aprea', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player11', name: 'Antonio Acampora', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player12', name: 'Nello DD', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player13', name: 'Fabio C.', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player14', name: 'Antonio Romano', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player15', name: 'Gigi R.', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player16', name: 'Luigi O.', avatar: null, preferredRole: null, otherRoles: [], email: ADMIN_EMAIL, claimed: true, isAdmin: true },
-            { id: 'player17', name: 'Valerio C.', avatar: null, preferredRole: null, otherRoles: [] },
-            { id: 'player18', name: 'Augusto DC', avatar: null, preferredRole: null, otherRoles: [] }
         ];
 
 /* ============================================================================
@@ -474,12 +446,9 @@ const handleGoogleLogin = () => {
    ========================================================================== */
 
         function PlayersListPage({ users, currentUser, votes, onSelectPlayer }) {
-			const hasVoted = (playerId) => {
+            const hasVoted = (playerId) => {
                 return votes.some(v => v.voterId === currentUser.id && v.playerId === playerId);
             };
-
-            // Controlla se l'utente ha già votato i 18 iniziali (offline)
-            const hasAlreadyVotedInitial = PLAYERS_ALREADY_VOTED.includes(currentUser.name);
 
             // Mostra solo giocatori non ancora votati
             const playersToVote = users.filter(u => {
@@ -489,11 +458,12 @@ const handleGoogleLogin = () => {
                 // Escludi già votati nell'app
                 if (hasVoted(u.id)) return false;
                 
-                // Se ha già votato i 18 iniziali offline, escludi anche quelli
-                if (hasAlreadyVotedInitial && INITIAL_PLAYER_IDS.includes(u.id)) return false;
+                // Se l'utente corrente ha votato offline, escludi i giocatori iniziali
+                if (currentUser.hasVotedOffline && u.isInitialPlayer) return false;
                 
                 return true;
             });
+
             return (
                 <div>
                     <h2 style={{marginBottom: '30px', color: '#2d3748'}}>
@@ -503,6 +473,11 @@ const handleGoogleLogin = () => {
                     {playersToVote.length === 0 ? (
                         <div className="no-votes">
                             <h3>🎉 Ottimo lavoro, hai valutato tutti!</h3>
+                            {currentUser.hasVotedOffline && (
+                                <p style={{marginTop: '15px', color: '#718096'}}>
+                                    Hai già votato i giocatori iniziali offline. Potrai votare i nuovi iscritti.
+                                </p>
+                            )}
                         </div>
                     ) : (
                     <div className="players-grid">
@@ -510,8 +485,8 @@ const handleGoogleLogin = () => {
                             <div 
                                 key={player.id}
                                 className="player-card"
-                                onClick={() => !hasVoted(player.id) && onSelectPlayer(player.id)}
-								style={{cursor: 'pointer'}}
+                                onClick={() => onSelectPlayer(player.id)}
+                                style={{cursor: 'pointer'}}
                             >
                                 <div className="avatar">
                                     {player.avatar ? (
@@ -521,8 +496,22 @@ const handleGoogleLogin = () => {
                                     )}
                                 </div>
                                 <h3>{player.name}</h3>
-<div className="status">
-                                    Clicca per valutare
+                                <div className="status">
+                                    {!player.isInitialPlayer && (
+                                        <span style={{
+                                            background: '#48bb78',
+                                            color: 'white',
+                                            padding: '4px 10px',
+                                            borderRadius: '12px',
+                                            fontSize: '11px',
+                                            fontWeight: '600',
+                                            display: 'inline-block',
+                                            marginBottom: '8px'
+                                        }}>
+                                            ⭐ NUOVO
+                                        </span>
+                                    )}
+                                    <div>Clicca per valutare</div>
                                 </div>
                             </div>
                         ))}
@@ -531,7 +520,6 @@ const handleGoogleLogin = () => {
                 </div>
             );
         }
-
 /* ============================================================================
    SEZIONE 9: COMPONENTE RATING FORM
    ============================================================================
