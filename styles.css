@@ -186,13 +186,12 @@ p {
 
 .nav-tab:hover {
     color: var(--volt);
-    background: rgba(210, 248, 0, 0.08);
 }
 
 .nav-tab.active {
     color: var(--volt);
     border-bottom: 3px solid var(--volt);
-    background: rgba(210, 248, 0, 0.05);
+    background: linear-gradient(to top, rgba(210, 248, 0, 0.15), transparent);
 }
 
 /* ============================================================================
