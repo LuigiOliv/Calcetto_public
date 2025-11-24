@@ -193,6 +193,14 @@ p {
     border-bottom: 3px solid var(--volt);
     background: linear-gradient(to top, rgba(210, 248, 0, 0.15), transparent);
 }
+.nav-tab, 
+.nav-tab:hover, 
+.nav-tab.active {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    -webkit-box-shadow: none !important;
+}
 
 /* ============================================================================
    CONTENT AREA
