@@ -1469,49 +1469,11 @@ const handleGoogleLogin = () => {
             const [editingVotes, setEditingVotes] = useState(null);
             const [voteValues, setVoteValues] = useState({});
             const [showImport, setShowImport] = useState(false);
-            const [setupDone, setSetupDone] = useState(false);
 
             const showSuccessMsg = (msg) => {
                 setSuccessMessage(msg);
                 setShowSuccess(true);
                 setTimeout(() => setShowSuccess(false), 3000);
-            };
-
-            const handleSetupDatabase = async () => {
-                if (!confirm('⚠️ Questa operazione imposta i campi nel database. Eseguire solo UNA volta. Continuare?')) return;
-                
-                try {
-                    // Lista dei 18 giocatori iniziali
-                    const initialPlayerIds = ['player1', 'player2', 'player3', 'player4', 'player5', 
-                                              'player6', 'player7', 'player8', 'player9', 'player10', 
-                                              'player11', 'player12', 'player13', 'player14', 'player15', 
-                                              'player16', 'player17', 'player18'];
-                    
-                    // Lista di chi ha votato offline
-                    const offlineVoters = ['Luigi O.', 'Augusto DC', 'Fabio C.', 'Valerio C.', 
-                                           'Antonio Travino', 'Nello DD', 'Gianmarco', 'Lino D.', 
-                                           'Antonio Acampora', 'Fabrizio B.', 'Zio Kekko'];
-                    
-                    // Aggiorna tutti gli utenti
-                    for (const user of users) {
-                        const isInitial = initialPlayerIds.includes(user.id);
-                        const hasVotedOffline = offlineVoters.includes(user.name);
-                        
-                        const updatedUser = {
-                            ...user,
-                            isInitialPlayer: isInitial,
-                            hasVotedOffline: hasVotedOffline
-                        };
-                        
-                        await storage.updateUser(updatedUser);
-                    }
-                    
-                    setSetupDone(true);
-                    showSuccessMsg('✅ Database configurato con successo!');
-                    setTimeout(() => window.location.reload(), 1500);
-                } catch (error) {
-                    alert('❌ Errore: ' + error.message);
-                }
             };
 
             const handleEditName = (player) => {
@@ -1684,23 +1646,6 @@ const handleGoogleLogin = () => {
                     )}
 
                     <div className="settings-group" style={{marginTop: '40px'}}>
-                        <h3>🔧 Setup Database (esegui una sola volta)</h3>
-                        <div style={{background: '#f0fff4', padding: '20px', borderRadius: '10px', border: '2px solid #48bb78'}}>
-                            <p style={{color: '#2f855a', marginBottom: '15px'}}>
-                                Imposta i campi necessari nel database (isInitialPlayer, hasVotedOffline)
-                            </p>
-                            <button 
-                                className="btn btn-primary" 
-                                onClick={handleSetupDatabase}
-                                disabled={setupDone}
-                                style={{opacity: setupDone ? 0.5 : 1}}
-                            >
-                                {setupDone ? '✅ Setup completato' : '🚀 Esegui Setup Database'}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="settings-group" style={{marginTop: '40px'}}>
                         <h3 style={{color: '#e53e3e'}}>⚠️ Zona Pericolosa</h3>
                         <div style={{background: '#fff5f5', padding: '20px', borderRadius: '10px', border: '2px solid #fc8181'}}>
                             <p style={{color: '#c53030', marginBottom: '15px'}}>Azioni irreversibili!</p>
@@ -1743,6 +1688,8 @@ const handleGoogleLogin = () => {
    ========================================================================== */
 
         function DebugPage({ users, votes }) {
+            const [selectedPlayer, setSelectedPlayer] = useState(null);
+
             const getVoteStats = (playerId) => {
                 const playerVotes = votes.filter(v => v.playerId === playerId);
                 const seedVotes = playerVotes.filter(v => v.voterId && v.voterId.startsWith('seed'));
@@ -1751,11 +1698,175 @@ const handleGoogleLogin = () => {
                 return {
                     total: playerVotes.length,
                     seed: seedVotes.length,
-                    real: realVotes.length
+                    real: realVotes.length,
+                    allVotes: playerVotes
                 };
             };
 
             const players = users.filter(u => !u.id.startsWith('seed'));
+
+            const renderPlayerDetail = (player) => {
+                const stats = getVoteStats(player.id);
+                const averages = utils.calculateAverages(player.id, votes);
+                const overall = utils.calculateOverall(averages);
+
+                return (
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '12px',
+                        padding: '30px',
+                        marginTop: '20px'
+                    }}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px'}}>
+                            <h2 style={{margin: 0, color: '#2d3748'}}>
+                                📊 Dettaglio: {player.name}
+                            </h2>
+                            <button 
+                                onClick={() => setSelectedPlayer(null)}
+                                style={{
+                                    padding: '8px 16px',
+                                    background: '#e2e8f0',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ← Indietro
+                            </button>
+                        </div>
+
+                        {/* Riepilogo */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(4, 1fr)',
+                            gap: '15px',
+                            marginBottom: '30px'
+                        }}>
+                            <div style={{background: '#f7fafc', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
+                                <div style={{fontSize: '24px', fontWeight: '700', color: '#667eea'}}>
+                                    {stats.seed}
+                                </div>
+                                <div style={{fontSize: '12px', color: '#718096'}}>Voti Seed</div>
+                            </div>
+                            <div style={{background: '#f7fafc', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
+                                <div style={{fontSize: '24px', fontWeight: '700', color: '#48bb78'}}>
+                                    {stats.real}
+                                </div>
+                                <div style={{fontSize: '12px', color: '#718096'}}>Voti Reali</div>
+                            </div>
+                            <div style={{background: '#f7fafc', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
+                                <div style={{fontSize: '24px', fontWeight: '700', color: '#2d3748'}}>
+                                    {stats.total}
+                                </div>
+                                <div style={{fontSize: '12px', color: '#718096'}}>Totale</div>
+                            </div>
+                            <div style={{background: '#f7fafc', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
+                                <div style={{fontSize: '24px', fontWeight: '700', color: '#f56565'}}>
+                                    {overall ? utils.toBase10(overall).toFixed(2) : '-'}
+                                </div>
+                                <div style={{fontSize: '12px', color: '#718096'}}>Overall</div>
+                            </div>
+                        </div>
+
+                        {/* Tabella voti dettagliata */}
+                        <h3 style={{marginBottom: '15px', color: '#2d3748'}}>🗳️ Tutti i Voti</h3>
+                        <div style={{overflowX: 'auto'}}>
+                            <table style={{width: '100%', borderCollapse: 'collapse', fontSize: '13px'}}>
+                                <thead>
+                                    <tr style={{background: '#2d3748', color: 'white'}}>
+                                        <th style={{padding: '12px', textAlign: 'left'}}>Votante</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Tipo</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Tiro</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Pass.C</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Pass.L</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Contr.</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Control.</th>
+                                        <th style={{padding: '12px', textAlign: 'center'}}>Media</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stats.allVotes.map((vote, index) => {
+                                        const isSeed = vote.voterId.startsWith('seed');
+                                        const voterName = isSeed ? '🤖 Seed' : (users.find(u => u.id === vote.voterId)?.name || 'Sconosciuto');
+                                        const voteAvg = Object.values(vote.ratings).reduce((a, b) => a + b, 0) / Object.values(vote.ratings).length;
+                                        
+                                        return (
+                                            <tr key={index} style={{
+                                                background: index % 2 === 0 ? '#f7fafc' : 'white',
+                                                borderBottom: '1px solid #e2e8f0'
+                                            }}>
+                                                <td style={{padding: '10px'}}>{voterName}</td>
+                                                <td style={{padding: '10px', textAlign: 'center'}}>
+                                                    <span style={{
+                                                        background: isSeed ? '#667eea' : '#48bb78',
+                                                        color: 'white',
+                                                        padding: '3px 8px',
+                                                        borderRadius: '10px',
+                                                        fontSize: '11px'
+                                                    }}>
+                                                        {isSeed ? 'Seed' : 'Reale'}
+                                                    </span>
+                                                </td>
+                                                <td style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>{vote.ratings['Tiro'] || '-'}</td>
+                                                <td style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>{vote.ratings['Passaggio corto'] || '-'}</td>
+                                                <td style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>{vote.ratings['Passaggio lungo'] || '-'}</td>
+                                                <td style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>{vote.ratings['Contrasto'] || '-'}</td>
+                                                <td style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>{vote.ratings['Controllo'] || '-'}</td>
+                                                <td style={{padding: '10px', textAlign: 'center', fontWeight: '700', color: '#667eea'}}>
+                                                    {voteAvg.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Medie per skill */}
+                        {averages && (
+                            <div style={{marginTop: '30px'}}>
+                                <h3 style={{marginBottom: '15px', color: '#2d3748'}}>📈 Calcolo Medie per Skill</h3>
+                                <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
+                                    {Object.entries(SKILLS).map(([category, skills]) => (
+                                        <div key={category} style={{background: '#f7fafc', borderRadius: '10px', padding: '15px'}}>
+                                            <h4 style={{
+                                                color: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565',
+                                                marginBottom: '10px',
+                                                textTransform: 'capitalize'
+                                            }}>
+                                                {category}
+                                            </h4>
+                                            {skills.map(skill => {
+                                                const skillVotes = stats.allVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
+                                                const avg = skillVotes.reduce((a, b) => a + b, 0) / skillVotes.length;
+                                                
+                                                return (
+                                                    <div key={skill} style={{
+                                                        marginBottom: '8px',
+                                                        fontSize: '12px'
+                                                    }}>
+                                                        <div style={{fontWeight: '600', color: '#4a5568'}}>{skill}</div>
+                                                        <div style={{color: '#718096', marginTop: '2px'}}>
+                                                            Voti: {skillVotes.join(', ')} = <span style={{fontWeight: '700', color: '#2d3748'}}>
+                                                                Media: {avg.toFixed(2)} → {utils.toBase10(avg).toFixed(2)}/10
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            if (selectedPlayer) {
+                const player = players.find(p => p.id === selectedPlayer);
+                return renderPlayerDetail(player);
+            }
 
             return (
                 <div style={{maxWidth: '1200px', margin: '0 auto'}}>
@@ -1798,7 +1909,7 @@ const handleGoogleLogin = () => {
                         <h3 style={{marginBottom: '20px'}}>👥 Dettaglio per Giocatore</h3>
                         <div style={{
                             display: 'grid',
-                            gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                            gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 100px',
                             gap: '10px',
                             padding: '15px',
                             background: '#2d3748',
@@ -1812,6 +1923,7 @@ const handleGoogleLogin = () => {
                             <div style={{textAlign: 'center'}}>Voti Reali</div>
                             <div style={{textAlign: 'center'}}>Totale</div>
                             <div style={{textAlign: 'center'}}>Overall</div>
+                            <div style={{textAlign: 'center'}}>Azioni</div>
                         </div>
 
                         {players.map(player => {
@@ -1824,7 +1936,7 @@ const handleGoogleLogin = () => {
                                     key={player.id}
                                     style={{
                                         display: 'grid',
-                                        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                                        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 100px',
                                         gap: '10px',
                                         padding: '15px',
                                         background: 'white',
@@ -1871,6 +1983,22 @@ const handleGoogleLogin = () => {
                                     }}>
                                         {overall ? utils.toBase10(overall).toFixed(2) : '-'}
                                     </div>
+                                    <div style={{textAlign: 'center'}}>
+                                        <button
+                                            onClick={() => setSelectedPlayer(player.id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                background: '#667eea',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            🔍 Dettagli
+                                        </button>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -1888,7 +2016,7 @@ const handleGoogleLogin = () => {
                             <li><strong>Voti Seed:</strong> Voti inseriti dall'Admin (dovrebbero essere 8 per giocatore)</li>
                             <li><strong>Voti Reali:</strong> Voti dati da altri utenti dell'app</li>
                             <li><strong>Overall:</strong> Media di tutte le skill (scala 1-10)</li>
-                            <li>Se i voti seed sono diversi da 8, c'è un problema nel salvataggio Admin</li>
+                            <li>Clicca su "🔍 Dettagli" per vedere tutti i voti e i calcoli delle medie</li>
                         </ul>
                     </div>
                 </div>
