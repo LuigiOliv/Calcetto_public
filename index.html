@@ -4,17 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calcetto Rating App</title>
-    
-    <!-- CSS SEPARATO - styles.css per l'aspetto dark/gaming -->
     <link rel="stylesheet" href="styles.css">
-    
-    <!-- Librerie esterne -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Firebase Compat (funziona senza modules) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>	
@@ -27,7 +21,6 @@
         messagingSenderId: "1035881443344",
         appId: "1:1035881443344:web:2690813dc00bce70d19a95"
       };
-      
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
     </script>
@@ -45,10 +38,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-/* ============================================================================
-   SEZIONE 1: CONFIGURAZIONE
-   ============================================================================ */
-
         const ADMIN_EMAIL = 'luigi.oliviero@gmail.com';
 
         const SKILLS = {
@@ -58,27 +47,15 @@
         };
 
         const ROLES = [
-            'Portiere',
-            'Difensore centrale',
-            'Difensore laterale sx',
-            'Difensore laterale dx',
-            'Centrocampista difensivo',
-            'Centrocampista offensivo',
-            'Mezzala sx',
-            'Mezzala dx',
-            'Centravanti'
+            'Portiere', 'Difensore centrale', 'Difensore laterale sx', 'Difensore laterale dx',
+            'Centrocampista difensivo', 'Centrocampista offensivo', 'Mezzala sx', 'Mezzala dx', 'Centravanti'
         ];
-
-/* ============================================================================
-   SEZIONE 2: STORAGE (Firestore)
-   ============================================================================ */
 
         const storage = {
             getUsers: async () => {
                 const snapshot = await db.collection('users').get();
                 return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             },
-            
             setUsers: async (users) => {
                 const batch = db.batch();
                 users.forEach(user => {
@@ -87,20 +64,16 @@
                 });
                 await batch.commit();
             },
-            
             updateUser: async (user) => {
                 await db.collection('users').doc(user.id).set(user);
             },
-            
             getVotes: async () => {
                 const snapshot = await db.collection('votes').get();
                 return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             },
-            
             addVote: async (vote) => {
                 await db.collection('votes').add(vote);
             },
-            
             setVotes: async (votes) => {
                 const batch = db.batch();
                 votes.forEach((vote, index) => {
@@ -109,44 +82,33 @@
                 });
                 await batch.commit();
             },
-            
             getCurrentUser: () => JSON.parse(localStorage.getItem('calcetto_current_user') || 'null'),
             setCurrentUser: (user) => localStorage.setItem('calcetto_current_user', JSON.stringify(user)),
-            
             clearAll: () => {
                 localStorage.removeItem('calcetto_current_user');
             }
         };
 
-/* ============================================================================
-   SEZIONE 3: UTILITIES (Calcoli)
-   ============================================================================ */
-
         const utils = {
             calculateAverages: (playerId, votes) => {
                 const playerVotes = votes.filter(v => v.playerId === playerId);
                 if (playerVotes.length === 0) return null;
-                
                 const averages = {};
                 const allSkills = [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche];
-                
                 allSkills.forEach(skill => {
                     const values = playerVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
                     if (values.length > 0) {
                         averages[skill] = values.reduce((a, b) => a + b, 0) / values.length;
                     }
                 });
-                
                 return averages;
             },
-            
             calculateOverall: (averages) => {
                 if (!averages) return null;
                 const values = Object.values(averages);
                 if (values.length === 0) return null;
                 return values.reduce((a, b) => a + b, 0) / values.length;
             },
-            
             calculateCategoryOverall: (averages, category) => {
                 if (!averages) return null;
                 const skills = SKILLS[category];
@@ -154,23 +116,16 @@
                 if (values.length === 0) return null;
                 return values.reduce((a, b) => a + b, 0) / values.length;
             },
-            
             countVotes: (playerId, votes) => {
                 return votes.filter(v => v.playerId === playerId).length;
             },
-            
             toBase10: (value) => {
                 return (value / 4) * 10;
             },
-            
             getInitials: (name) => {
                 return name.substring(0, 2).toUpperCase();
             }
         };
-
-/* ============================================================================
-   SEZIONE 4: COMPONENTE LOGIN PAGE
-   ============================================================================ */
 
         function LoginPage({ onLogin }) {
             const [loading, setLoading] = useState(false);
@@ -179,13 +134,9 @@
             const handleGoogleLogin = () => {
                 setLoading(true);
                 setError('');
-                
                 const provider = new firebase.auth.GoogleAuthProvider();
-                
                 firebase.auth().signInWithPopup(provider)
-                    .then((result) => {
-                        onLogin(result.user.email);
-                    })
+                    .then((result) => { onLogin(result.user.email); })
                     .catch((err) => {
                         console.error(err);
                         setError('Errore: ' + err.message);
@@ -198,96 +149,43 @@
                     <div className="login-card">
                         <h1>⚽ Calcetto Rating</h1>
                         <p>Valuta i tuoi compagni di squadra</p>
-                        
                         {error && <p className="error-message">{error}</p>}
-                        
-                        <button 
-                            className="google-btn" 
-                            onClick={handleGoogleLogin}
-                            disabled={loading}
-                        >
-                            <span style={{fontSize: '24px'}}>🔐</span>
+                        <button className="google-btn" onClick={handleGoogleLogin} disabled={loading}>
+                            <span>🔐</span>
                             {loading ? 'Accesso in corso...' : 'Accedi con Google'}
                         </button>
-                        
-                        <p style={{marginTop: '30px', fontSize: '12px', opacity: 0.7}}>
-                            Al primo accesso potrai associare il tuo profilo
-                        </p>
+                        <p className="login-hint">Al primo accesso potrai associare il tuo profilo</p>
                     </div>
                 </div>
             );
         }
 
-/* ============================================================================
-   SEZIONE 5: COMPONENTE CLAIM MODAL
-   ============================================================================ */
-
         function ClaimProfileModal({ users, onClaim, onNewPlayer }) {
             const [selectedPlayer, setSelectedPlayer] = useState('');
             const [newPlayerName, setNewPlayerName] = useState('');
-            
-            const availablePlayers = users.filter(u => 
-                !u.claimed && !u.id.startsWith('seed')
-            );
-
-            const handleClaim = () => {
-                if (selectedPlayer) {
-                    onClaim(selectedPlayer);
-                }
-            };
+            const availablePlayers = users.filter(u => !u.claimed && !u.id.startsWith('seed'));
 
             return (
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h2>👋 Benvenuto!</h2>
                         <p>Chi sei tra questi giocatori?</p>
-
                         <div className="form-group">
                             <label>Seleziona il tuo nome:</label>
-                            <select 
-                                value={selectedPlayer} 
-                                onChange={(e) => setSelectedPlayer(e.target.value)}
-                            >
+                            <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)}>
                                 <option value="">-- Seleziona il tuo profilo --</option>
                                 {availablePlayers.map(player => (
-                                    <option key={player.id} value={player.id}>
-                                        {player.name}
-                                    </option>
+                                    <option key={player.id} value={player.id}>{player.name}</option>
                                 ))}
                             </select>
                         </div>
-
-                        <button 
-                            className="btn btn-primary" 
-                            onClick={handleClaim}
-                            disabled={!selectedPlayer}
-                            style={{width: '100%', marginBottom: '15px'}}
-                        >
+                        <button className="btn btn-primary full-width" onClick={() => selectedPlayer && onClaim(selectedPlayer)} disabled={!selectedPlayer}>
                             ✓ Sono io!
                         </button>
-
-                        <div style={{
-                            borderTop: '1px solid rgba(255,255,255,0.1)',
-                            paddingTop: '20px',
-                            marginTop: '10px',
-                            textAlign: 'center'
-                        }}>
-                            <p style={{fontSize: '14px', marginBottom: '15px', opacity: 0.8}}>
-                                Non trovi il tuo nome?
-                            </p>
-                            <input 
-                                type="text"
-                                placeholder="Scrivi il tuo nome e cognome"
-                                value={newPlayerName}
-                                onChange={(e) => setNewPlayerName(e.target.value)}
-                                style={{marginBottom: '15px'}}
-                            />
-                            <button 
-                                className="btn btn-secondary"
-                                onClick={() => onNewPlayer(newPlayerName)}
-                                style={{width: '100%'}}
-                                disabled={!newPlayerName.trim()}
-                            >
+                        <div className="modal-divider">
+                            <p className="modal-hint">Non trovi il tuo nome?</p>
+                            <input type="text" placeholder="Scrivi il tuo nome e cognome" value={newPlayerName} onChange={(e) => setNewPlayerName(e.target.value)} />
+                            <button className="btn btn-secondary full-width" onClick={() => onNewPlayer(newPlayerName)} disabled={!newPlayerName.trim()}>
                                 + Sono un nuovo giocatore
                             </button>
                         </div>
@@ -295,10 +193,6 @@
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 6: COMPONENTE ROLE SELECTION MODAL
-   ============================================================================ */
 
         function RoleSelectionModal({ onSave }) {
             const [preferredRole, setPreferredRole] = useState('');
@@ -313,14 +207,8 @@
             };
 
             const handleSubmit = () => {
-                if (!preferredRole) {
-                    alert('Seleziona il tuo ruolo preferito');
-                    return;
-                }
-                if (otherRoles.length < 2) {
-                    alert('Seleziona almeno 2 altri ruoli');
-                    return;
-                }
+                if (!preferredRole) { alert('Seleziona il tuo ruolo preferito'); return; }
+                if (otherRoles.length < 2) { alert('Seleziona almeno 2 altri ruoli'); return; }
                 onSave(preferredRole, otherRoles);
             };
 
@@ -331,53 +219,31 @@
                     <div className="modal-content">
                         <h2>⚽ Benvenuto!</h2>
                         <p>Prima di iniziare, raccontaci qualcosa di te</p>
-
                         <div className="form-group">
                             <label>Qual è il tuo ruolo preferito? *</label>
-                            <select 
-                                value={preferredRole} 
-                                onChange={(e) => setPreferredRole(e.target.value)}
-                            >
+                            <select value={preferredRole} onChange={(e) => setPreferredRole(e.target.value)}>
                                 <option value="">-- Seleziona --</option>
-                                {ROLES.map(role => (
-                                    <option key={role} value={role}>{role}</option>
-                                ))}
+                                {ROLES.map(role => (<option key={role} value={role}>{role}</option>))}
                             </select>
                         </div>
-
                         <div className="form-group">
                             <label>In quali altri ruoli ti adatti? (min. 2) *</label>
                             <div className="checkbox-group">
                                 {availableOtherRoles.map(role => (
                                     <div key={role} className="checkbox-item">
-                                        <input 
-                                            type="checkbox"
-                                            id={`role-${role}`}
-                                            checked={otherRoles.includes(role)}
-                                            onChange={() => handleOtherRoleToggle(role)}
-                                        />
+                                        <input type="checkbox" id={`role-${role}`} checked={otherRoles.includes(role)} onChange={() => handleOtherRoleToggle(role)} />
                                         <label htmlFor={`role-${role}`}>{role}</label>
                                     </div>
                                 ))}
                             </div>
                         </div>
-
-                        <button 
-                            className={`btn btn-primary ${(!preferredRole || otherRoles.length < 2) ? 'btn-disabled' : ''}`}
-                            onClick={handleSubmit}
-                            disabled={!preferredRole || otherRoles.length < 2}
-                            style={{width: '100%', marginTop: '20px'}}
-                        >
+                        <button className={`btn btn-primary full-width ${(!preferredRole || otherRoles.length < 2) ? 'btn-disabled' : ''}`} onClick={handleSubmit} disabled={!preferredRole || otherRoles.length < 2}>
                             Conferma {otherRoles.length < 2 && preferredRole ? `(${otherRoles.length}/2 ruoli)` : ''}
                         </button>
                     </div>
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 7: COMPONENTE HEADER
-   ============================================================================ */
 
         function Header({ user, onLogout }) {
             return (
@@ -388,27 +254,17 @@
                     </div>
                     <div className="user-info">
                         <div className="avatar">
-                            {user.avatar ? (
-                                <img src={user.avatar} alt={user.name} />
-                            ) : (
-                                utils.getInitials(user.name)
-                            )}
+                            {user.avatar ? <img src={user.avatar} alt={user.name} /> : utils.getInitials(user.name)}
                         </div>
                         <div>
                             <div className="user-name">{user.name}</div>
                             <div className="user-email">{user.email}</div>
                         </div>
-                        <button className="logout-btn" onClick={onLogout}>
-                            Esci
-                        </button>
+                        <button className="logout-btn" onClick={onLogout}>Esci</button>
                     </div>
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 8: COMPONENTE PLAYERS LIST PAGE
-   ============================================================================ */
 
         function PlayersListPage({ users, currentUser, votes, onSelectPlayer }) {
             const hasVoted = (playerId) => {
@@ -424,50 +280,20 @@
 
             return (
                 <div>
-                    <h2 style={{marginBottom: '30px'}}>
-                        Seleziona un giocatore da valutare
-                    </h2>
-                    
+                    <h2>Seleziona un giocatore da valutare</h2>
                     {playersToVote.length === 0 ? (
                         <div className="no-votes">
                             <h3>🎉 Ottimo lavoro, hai valutato tutti!</h3>
-                            {currentUser.hasVotedOffline && (
-                                <p style={{marginTop: '15px'}}>
-                                    Hai già votato tutti. Potrai votare i nuovi iscritti.
-                                </p>
-                            )}
+                            {currentUser.hasVotedOffline && <p>Hai già votato tutti. Potrai votare i nuovi iscritti.</p>}
                         </div>
                     ) : (
                         <div className="players-grid">
                             {playersToVote.map(player => (
-                                <div 
-                                    key={player.id}
-                                    className="player-card"
-                                    onClick={() => onSelectPlayer(player.id)}
-                                >
-                                    <div className="avatar">
-                                        {player.avatar ? (
-                                            <img src={player.avatar} alt={player.name} />
-                                        ) : (
-                                            utils.getInitials(player.name)
-                                        )}
-                                    </div>
+                                <div key={player.id} className="player-card" onClick={() => onSelectPlayer(player.id)}>
+                                    <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
                                     <h3>{player.name}</h3>
                                     <div className="status">
-                                        {!player.isInitialPlayer && (
-                                            <span style={{
-                                                background: '#48bb78',
-                                                color: 'white',
-                                                padding: '4px 10px',
-                                                borderRadius: '12px',
-                                                fontSize: '11px',
-                                                fontWeight: '600',
-                                                display: 'inline-block',
-                                                marginBottom: '8px'
-                                            }}>
-                                                ⭐ NUOVO
-                                            </span>
-                                        )}
+                                        {!player.isInitialPlayer && <span className="new-badge">⭐ NUOVO</span>}
                                         <div>Clicca per valutare</div>
                                     </div>
                                 </div>
@@ -478,19 +304,8 @@
             );
         }
 
-/* ============================================================================
-   SEZIONE 9: COMPONENTE RATING FORM
-   ============================================================================ */
-
         function RatingForm({ player, onSubmit, onCancel }) {
             const [ratings, setRatings] = useState({});
-
-            const handleRating = (skill, value) => {
-                setRatings(prev => ({
-                    ...prev,
-                    [skill]: value
-                }));
-            };
 
             const isComplete = () => {
                 const allSkills = [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche];
@@ -498,45 +313,26 @@
             };
 
             const handleSubmit = () => {
-                if (isComplete()) {
-                    onSubmit(player.id, ratings);
-                } else {
-                    alert('Completa tutte le valutazioni prima di inviare');
-                }
+                if (isComplete()) { onSubmit(player.id, ratings); } 
+                else { alert('Completa tutte le valutazioni prima di inviare'); }
             };
 
             return (
                 <div className="rating-form">
                     <div className="form-header">
-                        <div className="avatar">
-                            {player.avatar ? (
-                                <img src={player.avatar} alt={player.name} />
-                            ) : (
-                                utils.getInitials(player.name)
-                            )}
-                        </div>
+                        <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
                         <h2>Valuta {player.name}</h2>
                         <p>Scala: 1=Scarso | 2=Sufficiente | 3=Buono | 4=Ottimo</p>
                     </div>
-
                     {Object.entries(SKILLS).map(([category, skills]) => (
                         <div key={category} className="category-section">
-                            <div className="category-title" style={{
-                                color: category === 'tecniche' ? '#667eea' : 
-                                       category === 'tattiche' ? '#48bb78' : '#f56565'
-                            }}>
-                                {category.charAt(0).toUpperCase() + category.slice(1)}
-                            </div>
+                            <div className={`category-title category-${category}`}>{category.charAt(0).toUpperCase() + category.slice(1)}</div>
                             {skills.map(skill => (
                                 <div key={skill} className="skill-item">
                                     <div className="skill-name">{skill}</div>
                                     <div className="rating-buttons">
                                         {[1, 2, 3, 4].map(value => (
-                                            <button
-                                                key={value}
-                                                className={`rating-btn ${ratings[skill] === value ? 'selected' : ''}`}
-                                                onClick={() => handleRating(skill, value)}
-                                            >
+                                            <button key={value} className={`rating-btn ${ratings[skill] === value ? 'selected' : ''}`} onClick={() => setRatings(prev => ({...prev, [skill]: value}))}>
                                                 {value}
                                             </button>
                                         ))}
@@ -545,45 +341,27 @@
                             ))}
                         </div>
                     ))}
-
                     <div className="form-actions">
-                        <button className="btn btn-secondary" onClick={onCancel}>
-                            Annulla
-                        </button>
-                        <button 
-                            className="btn btn-primary" 
-                            onClick={handleSubmit}
-                            disabled={!isComplete()}
-                        >
-                            ✓ Invia Valutazione
-                        </button>
+                        <button className="btn btn-secondary" onClick={onCancel}>Annulla</button>
+                        <button className="btn btn-primary" onClick={handleSubmit} disabled={!isComplete()}>✓ Invia Valutazione</button>
                     </div>
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 10: COMPONENTE RADAR CHART
-   ============================================================================ */
 
         function RadarChart({ data, labels, category }) {
             const canvasRef = useRef(null);
 
             useEffect(() => {
                 if (!canvasRef.current || !data) return;
-
                 const ctx = canvasRef.current.getContext('2d');
-                
-                if (canvasRef.current.chart) {
-                    canvasRef.current.chart.destroy();
-                }
+                if (canvasRef.current.chart) { canvasRef.current.chart.destroy(); }
 
                 const colors = {
                     tecniche: 'rgba(102, 126, 234, 0.6)',
                     tattiche: 'rgba(72, 187, 120, 0.6)',
                     fisiche: 'rgba(245, 101, 101, 0.6)'
                 };
-
                 const borderColors = {
                     tecniche: 'rgb(102, 126, 234)',
                     tattiche: 'rgb(72, 187, 120)',
@@ -607,54 +385,30 @@
                         }]
                     },
                     options: {
-                        scales: {
-                            r: {
-                                beginAtZero: true,
-                                max: 10,
-                                min: 0,
-                                ticks: { stepSize: 2 }
-                            }
-                        },
+                        scales: { r: { beginAtZero: true, max: 10, min: 0, ticks: { stepSize: 2 } } },
                         plugins: { legend: { display: false } }
                     }
                 });
 
-                return () => {
-                    if (canvasRef.current?.chart) {
-                        canvasRef.current.chart.destroy();
-                    }
-                };
+                return () => { if (canvasRef.current?.chart) { canvasRef.current.chart.destroy(); } };
             }, [data, labels, category]);
 
             return <canvas ref={canvasRef} className="chart-canvas"></canvas>;
         }
 
-/* ============================================================================
-   SEZIONE 11: COMPONENTE PLAYER PROFILE
-   ============================================================================ */
-
         function PlayerProfile({ player, votes, isOwnProfile }) {
             const playerVotes = votes.filter(v => v.playerId === player.id);
             const voteCount = playerVotes.length;
             const hasEnoughVotes = voteCount >= 5;
-
             const averages = utils.calculateAverages(player.id, votes);
             const overall = utils.calculateOverall(averages);
 
             return (
                 <div className="profile-container">
                     <div className="profile-header">
-                        <div className="avatar" style={{width: '120px', height: '120px', fontSize: '48px'}}>
-                            {player.avatar ? (
-                                <img src={player.avatar} alt={player.name} />
-                            ) : (
-                                utils.getInitials(player.name)
-                            )}
-                        </div>
+                        <div className="avatar profile-avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
                         <h2>{player.name}</h2>
-                        <div className="votes-count">
-                            {voteCount} {voteCount === 1 ? 'valutazione' : 'valutazioni'} ricevute
-                        </div>
+                        <div className="votes-count">{voteCount} {voteCount === 1 ? 'valutazione' : 'valutazioni'} ricevute</div>
                     </div>
 
                     {hasEnoughVotes && overall && (
@@ -676,9 +430,7 @@
                                 <div className="role-item">
                                     <div className="role-label">Mi adatto anche a</div>
                                     <div className="role-badges">
-                                        {player.otherRoles.map(role => (
-                                            <span key={role} className="role-badge">{role}</span>
-                                        ))}
+                                        {player.otherRoles.map(role => (<span key={role} className="role-badge">{role}</span>))}
                                     </div>
                                 </div>
                             )}
@@ -692,52 +444,23 @@
                                     const catOverall = utils.calculateCategoryOverall(averages, category);
                                     return (
                                         <div key={category} className="chart-box">
-                                            <h3 style={{
-                                                color: category === 'tecniche' ? '#667eea' : 
-                                                       category === 'tattiche' ? '#48bb78' : '#f56565'
-                                            }}>
-                                                {category.charAt(0).toUpperCase() + category.slice(1)}
-                                            </h3>
-                                            {catOverall && (
-                                                <div className="category-overall">
-                                                    {utils.toBase10(catOverall).toFixed(2)}
-                                                </div>
-                                            )}
-                                            <RadarChart 
-                                                data={averages}
-                                                labels={skills}
-                                                category={category}
-                                            />
+                                            <h3 className={`category-${category}`}>{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                                            {catOverall && (<div className="category-overall">{utils.toBase10(catOverall).toFixed(2)}</div>)}
+                                            <RadarChart data={averages} labels={skills} category={category} />
                                         </div>
                                     );
                                 })}
                             </div>
-
-                            <div style={{marginTop: '40px'}}>
-                                <h3 style={{marginBottom: '20px', textAlign: 'center'}}>
-                                    📋 Dettaglio Valutazioni
-                                </h3>
-                                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px'}}>
+                            <div className="detail-section">
+                                <h3>📋 Dettaglio Valutazioni</h3>
+                                <div className="detail-grid">
                                     {Object.entries(SKILLS).map(([category, skills]) => (
                                         <div key={category} className="skill-detail-box">
-                                            <h4 style={{
-                                                color: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565',
-                                                marginBottom: '15px',
-                                                textTransform: 'capitalize',
-                                                borderBottom: '2px solid',
-                                                borderColor: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565',
-                                                paddingBottom: '10px'
-                                            }}>
-                                                {category}
-                                            </h4>
+                                            <h4 className={`category-${category}`}>{category}</h4>
                                             {skills.map(skill => (
                                                 <div key={skill} className="skill-detail-item">
                                                     <span>{skill}</span>
-                                                    <span className="skill-value" style={{
-                                                        color: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565'
-                                                    }}>
-                                                        {averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}
-                                                    </span>
+                                                    <span className={`skill-value category-${category}`}>{averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -748,23 +471,13 @@
                     ) : (
                         <div className="no-votes">
                             <h3>📊 Grafici non disponibili</h3>
-                            <p>
-                                {isOwnProfile 
-                                    ? "Chiedi ai tuoi compagni di valutarti!" 
-                                    : "Questo giocatore ha bisogno di più valutazioni"}
-                            </p>
-                            <p style={{marginTop: '10px', fontSize: '14px'}}>
-                                Servono almeno 5 valutazioni (attualmente: {voteCount})
-                            </p>
+                            <p>{isOwnProfile ? "Chiedi ai tuoi compagni di valutarti!" : "Questo giocatore ha bisogno di più valutazioni"}</p>
+                            <p>Servono almeno 5 valutazioni (attualmente: {voteCount})</p>
                         </div>
                     )}
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 12: COMPONENTE CLASSIFICHE PAGE
-   ============================================================================ */
 
         function ClassifichePage({ users, votes, onViewProfile }) {
             const playersWithStats = users
@@ -780,44 +493,23 @@
 
             return (
                 <div>
-                    <h2 style={{marginBottom: '30px'}}>
-                        📊 Classifica Generale
-                    </h2>
-                    
+                    <h2>📊 Classifica Generale</h2>
                     {playersWithStats.length === 0 ? (
                         <div className="no-votes">
                             <h3>Nessuna classifica disponibile</h3>
                             <p>I giocatori devono ricevere almeno 5 valutazioni per apparire</p>
                         </div>
                     ) : (
-                        <div style={{maxWidth: '800px', margin: '0 auto'}}>
+                        <div className="leaderboard-container">
                             {playersWithStats.map((player, index) => (
-                                <div 
-                                    key={player.id}
-                                    onClick={() => onViewProfile(player.id)}
-                                    className="leaderboard-item"
-                                    style={{
-                                        background: index === 0 ? 'linear-gradient(135deg, #ffd700, #ffb800)' :
-                                                   index === 1 ? 'linear-gradient(135deg, #c0c0c0, #a8a8a8)' :
-                                                   index === 2 ? 'linear-gradient(135deg, #cd7f32, #b87333)' : 'var(--bg-card)',
-                                        color: index < 3 ? 'white' : 'var(--text-main)'
-                                    }}
-                                >
-                                    <div style={{width: '40px', fontWeight: '700', fontSize: '20px'}}>
-                                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                                <div key={player.id} onClick={() => onViewProfile(player.id)} className={`leaderboard-item ${index < 3 ? 'podium' : ''} rank-${index + 1}`}>
+                                    <div className="rank-number">{index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}</div>
+                                    <div className="avatar leaderboard-avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
+                                    <div className="player-info">
+                                        <div className="player-name">{player.name}</div>
+                                        <div className="player-votes">{player.voteCount} valutazioni</div>
                                     </div>
-                                    <div className="avatar" style={{width: '50px', height: '50px', fontSize: '18px', marginRight: '15px'}}>
-                                        {player.avatar ? (
-                                            <img src={player.avatar} alt={player.name} />
-                                        ) : (
-                                            utils.getInitials(player.name)
-                                        )}
-                                    </div>
-                                    <div style={{flex: 1}}>
-                                        <div style={{fontWeight: '600', fontSize: '18px'}}>{player.name}</div>
-                                        <div style={{fontSize: '13px', opacity: 0.8}}>{player.voteCount} valutazioni</div>
-                                    </div>
-                                    <div style={{fontWeight: '800', fontSize: '28px'}}>{utils.toBase10(player.overall).toFixed(2)}</div>
+                                    <div className="overall-score">{utils.toBase10(player.overall).toFixed(2)}</div>
                                 </div>
                             ))}
                         </div>
@@ -825,10 +517,6 @@
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 13: COMPONENTE SETTINGS PAGE
-   ============================================================================ */
 
         function SettingsPage({ user, onUpdateUser }) {
             const [isEditing, setIsEditing] = useState(false);
@@ -843,9 +531,7 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        setEditAvatar(reader.result);
-                    };
+                    reader.onloadend = () => { setEditAvatar(reader.result); };
                     reader.readAsDataURL(file);
                 }
             };
@@ -859,27 +545,12 @@
             };
 
             const handleSave = async () => {
-                if (!editName.trim()) {
-                    alert('Il nome non può essere vuoto');
-                    return;
-                }
-                if (!editPreferredRole) {
-                    alert('Seleziona il tuo ruolo preferito');
-                    return;
-                }
-                if (editOtherRoles.length < 2) {
-                    alert('Seleziona almeno 2 altri ruoli');
-                    return;
-                }
+                if (!editName.trim()) { alert('Il nome non può essere vuoto'); return; }
+                if (!editPreferredRole) { alert('Seleziona il tuo ruolo preferito'); return; }
+                if (editOtherRoles.length < 2) { alert('Seleziona almeno 2 altri ruoli'); return; }
 
                 setSaving(true);
-                await onUpdateUser({
-                    ...user,
-                    name: editName.trim(),
-                    avatar: editAvatar,
-                    preferredRole: editPreferredRole,
-                    otherRoles: editOtherRoles
-                });
+                await onUpdateUser({ ...user, name: editName.trim(), avatar: editAvatar, preferredRole: editPreferredRole, otherRoles: editOtherRoles });
                 setSaving(false);
                 setIsEditing(false);
                 setShowSuccess(true);
@@ -898,197 +569,93 @@
 
             return (
                 <div className="settings-section">
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px'}}>
-                        <h2 style={{margin: 0}}>⚙️ Impostazioni</h2>
-                        {!isEditing && (
-                            <button 
-                                onClick={() => setIsEditing(true)}
-                                className="btn btn-primary"
-                            >
-                                ✏️ Modifica
-                            </button>
-                        )}
+                    <div className="settings-header">
+                        <h2>⚙️ Impostazioni</h2>
+                        {!isEditing && (<button onClick={() => setIsEditing(true)} className="btn btn-primary">✏️ Modifica</button>)}
                     </div>
 
-                    {showSuccess && (
-                        <div className="success-message">
-                            ✓ Modifiche salvate con successo!
-                        </div>
-                    )}
+                    {showSuccess && (<div className="success-message">✓ Modifiche salvate con successo!</div>)}
 
                     <div className="settings-group">
                         <h3>👤 Profilo</h3>
-
-                        <div style={{display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '25px', paddingBottom: '25px', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
-                            <div style={{position: 'relative'}}>
-                                <div className="avatar" style={{width: '100px', height: '100px', fontSize: '40px'}}>
-                                    {(isEditing ? editAvatar : user.avatar) ? (
-                                        <img src={isEditing ? editAvatar : user.avatar} alt={user.name} />
-                                    ) : (
-                                        utils.getInitials(isEditing ? editName : user.name)
-                                    )}
-                                </div>
-                                {isEditing && (
-                                    <label className="file-input-label" style={{
-                                        position: 'absolute',
-                                        bottom: '0',
-                                        right: '0',
-                                        width: '32px',
-                                        height: '32px',
-                                        padding: '0',
-                                        borderRadius: '50%',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '16px',
-                                        border: '3px solid var(--bg-card)'
-                                    }}>
-                                        📷
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            onChange={handleAvatarChange}
-                                            style={{display: 'none'}}
-                                        />
-                                    </label>
-                                )}
-                            </div>
-                            <div style={{flex: 1}}>
-                                <div style={{fontSize: '13px', opacity: 0.7, marginBottom: '5px'}}>
-                                    Foto profilo
-                                </div>
+                        <div className="avatar-section">
+                            <div className="avatar settings-avatar">{(isEditing ? editAvatar : user.avatar) ? <img src={isEditing ? editAvatar : user.avatar} alt={user.name} /> : utils.getInitials(isEditing ? editName : user.name)}</div>
+                            <div>
+                                <div className="settings-text-muted">Foto profilo</div>
                                 {isEditing ? (
-                                    <div style={{fontSize: '14px'}}>
-                                        Clicca sull'icona 📷 per cambiare foto
+                                    <div className="settings-text-value">
+                                        <label className="file-input-label">
+                                            📷 Carica Foto
+                                            <input type="file" accept="image/*" onChange={handleAvatarChange} />
+                                        </label>
                                     </div>
                                 ) : (
-                                    <div style={{fontSize: '14px'}}>
-                                        {user.avatar ? 'Foto caricata' : 'Nessuna foto'}
-                                    </div>
+                                    <div className="settings-text-value">{user.avatar ? 'Foto caricata' : 'Nessuna foto'}</div>
                                 )}
                             </div>
                         </div>
-
-                        <div style={{marginBottom: '25px', paddingBottom: '25px', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
-                            <div style={{fontSize: '13px', opacity: 0.7, marginBottom: '8px'}}>
-                                Nome
-                            </div>
-                            {isEditing ? (
-                                <input 
-                                    type="text"
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                />
-                            ) : (
-                                <div style={{fontSize: '18px', fontWeight: '600'}}>
-                                    {user.name}
-                                </div>
-                            )}
-                        </div>
-
+                        <div className="settings-divider"></div>
                         <div>
-                            <div style={{fontSize: '13px', opacity: 0.7, marginBottom: '8px'}}>
-                                Email
-                            </div>
-                            <div style={{fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                🔒 {user.email}
-                            </div>
-                            <div style={{fontSize: '12px', opacity: 0.5, marginTop: '5px'}}>
-                                L'email non può essere modificata
-                            </div>
+                            <div className="settings-text-muted">Nome</div>
+                            {isEditing ? (<input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} />) : (<div className="settings-text-value">{user.name}</div>)}
+                        </div>
+                        <div className="settings-divider"></div>
+                        <div>
+                            <div className="settings-text-muted">Email</div>
+                            <div className="settings-email">🔒 {user.email}</div>
+                            <div className="settings-email-note">L'email non può essere modificata</div>
                         </div>
                     </div>
 
                     <div className="settings-group">
                         <h3>⚽ Ruoli</h3>
-
                         {isEditing ? (
                             <>
                                 <div className="form-group">
                                     <label>Ruolo preferito *</label>
-                                    <select 
-                                        value={editPreferredRole} 
-                                        onChange={(e) => {
-                                            setEditPreferredRole(e.target.value);
-                                            setEditOtherRoles(editOtherRoles.filter(r => r !== e.target.value));
-                                        }}
-                                    >
+                                    <select value={editPreferredRole} onChange={(e) => { setEditPreferredRole(e.target.value); setEditOtherRoles(editOtherRoles.filter(r => r !== e.target.value)); }}>
                                         <option value="">-- Seleziona --</option>
                                         {ROLES.map(role => <option key={role} value={role}>{role}</option>)}
                                     </select>
                                 </div>
-
                                 <div className="form-group">
                                     <label>Altri ruoli (min. 2) *</label>
                                     <div className="checkbox-group">
                                         {availableOtherRoles.map(role => (
                                             <div key={role} className="checkbox-item">
-                                                <input 
-                                                    type="checkbox"
-                                                    id={`edit-${role}`}
-                                                    checked={editOtherRoles.includes(role)}
-                                                    onChange={() => handleOtherRoleToggle(role)}
-                                                />
+                                                <input type="checkbox" id={`edit-${role}`} checked={editOtherRoles.includes(role)} onChange={() => handleOtherRoleToggle(role)} />
                                                 <label htmlFor={`edit-${role}`}>{role}</label>
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{marginTop: '10px', fontSize: '13px', color: editOtherRoles.length >= 2 ? '#48bb78' : 'var(--hot-red)'}}>
-                                        {editOtherRoles.length}/2 ruoli selezionati {editOtherRoles.length >= 2 && '✓'}
-                                    </div>
+                                    <div className="role-counter">{editOtherRoles.length}/2 ruoli selezionati {editOtherRoles.length >= 2 && '✓'}</div>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <div className="role-item">
                                     <div className="role-label">Ruolo preferito</div>
-                                    {user.preferredRole ? (
-                                        <div className="role-value">{user.preferredRole}</div>
-                                    ) : (
-                                        <span style={{opacity: 0.5, fontStyle: 'italic'}}>Non impostato</span>
-                                    )}
+                                    {user.preferredRole ? (<div className="role-value">{user.preferredRole}</div>) : (<span className="empty-value">Non impostato</span>)}
                                 </div>
-
                                 <div className="role-item">
                                     <div className="role-label">Mi adatto anche a</div>
                                     {user.otherRoles && user.otherRoles.length > 0 ? (
-                                        <div className="role-badges">
-                                            {user.otherRoles.map(role => (
-                                                <span key={role} className="role-badge">{role}</span>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span style={{opacity: 0.5, fontStyle: 'italic'}}>Nessuno</span>
-                                    )}
+                                        <div className="role-badges">{user.otherRoles.map(role => (<span key={role} className="role-badge">{role}</span>))}</div>
+                                    ) : (<span className="empty-value">Nessuno</span>)}
                                 </div>
                             </>
                         )}
                     </div>
 
                     {isEditing && (
-                        <div style={{display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px'}}>
-                            <button 
-                                onClick={handleCancel}
-                                className="btn btn-secondary"
-                            >
-                                ✕ Annulla
-                            </button>
-                            <button 
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="btn btn-primary"
-                            >
-                                {saving ? '⏳ Salvataggio...' : '✓ Salva modifiche'}
-                            </button>
+                        <div className="settings-actions">
+                            <button onClick={handleCancel} className="btn btn-secondary">✕ Annulla</button>
+                            <button onClick={handleSave} disabled={saving} className="btn btn-primary">{saving ? '⏳ Salvataggio...' : '✓ Salva modifiche'}</button>
                         </div>
                     )}
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 13B: COMPONENTE CSV IMPORT MODAL
-   ============================================================================ */
 
         function CSVImportModal({ onClose, onSuccess }) {
             const [votesFile, setVotesFile] = useState(null);
@@ -1104,9 +671,7 @@
                     if (!line) continue;
                     const values = line.split(',');
                     const row = {};
-                    headers.forEach((header, index) => {
-                        row[header] = values[index] !== undefined ? values[index].trim() : '';
-                    });
+                    headers.forEach((header, index) => { row[header] = values[index] !== undefined ? values[index].trim() : ''; });
                     data.push(row);
                 }
                 return { headers, data };
@@ -1119,7 +684,6 @@
                     if (votesFile) {
                         const text = await votesFile.text();
                         const { data } = parseCSV(text);
-                        
                         for (const row of data) {
                             const vote = {
                                 voterId: row.voterId || `seed_csv_${Date.now()}_${Math.random()}`,
@@ -1143,10 +707,8 @@
                                 },
                                 timestamp: Date.now()
                             };
-                            
                             await storage.addVote(vote);
                         }
-                        
                         onSuccess();
                     }
                 } catch (e) {
@@ -1161,30 +723,19 @@
                     <div className="modal-content">
                         <h2>📁 Importa CSV</h2>
                         <p>Carica un file CSV con le valutazioni</p>
-
                         <div className="form-group">
                             <label>File Valutazioni (CSV)</label>
                             <input type="file" accept=".csv" onChange={(e) => setVotesFile(e.target.files[0])} />
                         </div>
-
-                        {error && <div style={{color: 'var(--hot-red)', marginBottom: '15px'}}>{error}</div>}
-
-                        <div style={{display: 'flex', gap: '15px', marginTop: '20px'}}>
-                            <button className="btn btn-secondary" onClick={onClose} style={{flex: 1}}>Annulla</button>
-                            <button className="btn btn-primary" onClick={handleImport} style={{flex: 1}} disabled={!votesFile || importing}>
-                                {importing ? 'Importazione...' : 'Importa'}
-                            </button>
+                        {error && <div className="error-message">{error}</div>}
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={onClose}>Annulla</button>
+                            <button className="btn btn-primary" onClick={handleImport} disabled={!votesFile || importing}>{importing ? 'Importazione...' : 'Importa'}</button>
                         </div>
                     </div>
                 </div>
             );
         }
-
-/* ============================================================================
-   SEZIONE 14: ADMIN & DEBUG PAGES
-   ============================================================================ 
-   (Copiato identico dall'HTML originale per brevità - nessuna modifica agli stili inline necessaria)
-*/
 
         function AdminPage({ users, setUsers, votes, setVotes }) {
             const [editingPlayer, setEditingPlayer] = useState(null);
@@ -1201,11 +752,6 @@
                 setTimeout(() => setShowSuccess(false), 3000);
             };
 
-            const handleEditName = (player) => {
-                setEditingPlayer(player.id);
-                setEditName(player.name);
-            };
-
             const handleSaveName = async (playerId) => {
                 if (!editName.trim()) return;
                 const updatedUser = users.find(u => u.id === playerId);
@@ -1214,7 +760,6 @@
                 const updatedUsers = users.map(u => u.id === playerId ? updatedUser : u);
                 setUsers(updatedUsers);
                 setEditingPlayer(null);
-                setEditName('');
                 showSuccessMsg('Nome aggiornato!');
             };
 
@@ -1228,23 +773,18 @@
 
             const handleEditVotes = (player) => {
                 const averages = utils.calculateAverages(player.id, votes);
+                const values = {};
                 if (averages) {
-                    const values = {};
                     Object.keys(averages).forEach(k => { values[k] = averages[k].toFixed(2); });
-                    setVoteValues(values);
                 } else {
-                    const emptyValues = {};
-                    [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => { emptyValues[skill] = ''; });
-                    setVoteValues(emptyValues);
+                    [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => { values[skill] = ''; });
                 }
+                setVoteValues(values);
                 setEditingVotes(player);
             };
 
             const handleSaveVotes = async () => {
-                const snapshot = await db.collection('votes')
-                    .where('playerId', '==', editingVotes.id)
-                    .get();
-                
+                const snapshot = await db.collection('votes').where('playerId', '==', editingVotes.id).get();
                 const batch = db.batch();
                 snapshot.docs.forEach(doc => {
                     if (doc.data().voterId && doc.data().voterId.startsWith('seed')) {
@@ -1254,12 +794,7 @@
                 await batch.commit();
 
                 for (let i = 0; i < 8; i++) {
-                    const seedVote = { 
-                        voterId: `seed_admin_${i}_${Date.now()}`, 
-                        playerId: editingVotes.id, 
-                        ratings: {}, 
-                        timestamp: Date.now() 
-                    };
+                    const seedVote = { voterId: `seed_admin_${i}_${Date.now()}`, playerId: editingVotes.id, ratings: {}, timestamp: Date.now() };
                     [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => {
                         const value = parseFloat(voteValues[skill]);
                         if (!isNaN(value)) seedVote.ratings[skill] = value;
@@ -1268,31 +803,14 @@
                 }
 
                 setEditingVotes(null);
-                setVoteValues({});
                 showSuccessMsg('Valutazioni aggiornate!');
                 setTimeout(() => window.location.reload(), 1000);
-            };
-
-            const handleResetVotes = (playerId) => {
-                if (!confirm('Eliminare tutte le valutazioni di questo giocatore?')) return;
-                showSuccessMsg('Funzione non disponibile con Firestore. Elimina manualmente dalla console Firebase.');
             };
 
             const handleAddPlayer = async () => {
                 const newName = prompt('Nome del nuovo giocatore:');
                 if (!newName || !newName.trim()) return;
-                const newPlayer = { 
-                    id: `player${users.length + 1}`, 
-                    name: newName.trim(), 
-                    avatar: null, 
-                    preferredRole: null, 
-                    otherRoles: [], 
-                    email: null, 
-                    claimed: false, 
-                    isAdmin: false,
-                    isInitialPlayer: false,
-                    hasVotedOffline: false
-                };
+                const newPlayer = { id: `player${users.length + 1}`, name: newName.trim(), avatar: null, preferredRole: null, otherRoles: [], email: null, claimed: false, isAdmin: false, isInitialPlayer: false, hasVotedOffline: false };
                 await storage.updateUser(newPlayer);
                 setUsers([...users, newPlayer]);
                 showSuccessMsg('Giocatore aggiunto!');
@@ -1306,47 +824,38 @@
             };
 
             return (
-                <div style={{maxWidth: '900px', margin: '0 auto'}}>
-                    <h2 style={{marginBottom: '30px'}}>🔧 Pannello Amministratore</h2>
-
+                <div className="admin-section">
+                    <h2>🔧 Pannello Amministratore</h2>
                     {showSuccess && <div className="success-message">✓ {successMessage}</div>}
 
                     <div className="settings-group">
-                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                        <div className="admin-header">
                             <h3>👥 Gestione Giocatori ({users.filter(u => !u.id.startsWith('seed')).length})</h3>
                             <button className="btn btn-primary" onClick={handleAddPlayer}>+ Aggiungi</button>
                         </div>
-                        
                         <div className="admin-player-list">
                             {users.filter(u => !u.id.startsWith('seed')).map((player, index) => {
                                 const voteCount = utils.countVotes(player.id, votes);
                                 const averages = utils.calculateAverages(player.id, votes);
                                 const overall = utils.calculateOverall(averages);
-                                
                                 return (
                                     <div key={player.id} className="admin-player-item">
-                                        <span style={{opacity: 0.5, width: '25px'}}>{index + 1}.</span>
-                                        
+                                        <span className="player-index">{index + 1}.</span>
                                         {editingPlayer === player.id ? (
-                                            <div style={{display: 'flex', gap: '10px', flex: 1}}>
+                                            <>
                                                 <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
-                                                <button onClick={() => handleSaveName(player.id)} className="btn btn-primary">✓</button>
-                                                <button onClick={() => setEditingPlayer(null)} className="btn btn-secondary">✕</button>
-                                            </div>
+                                                <button onClick={() => handleSaveName(player.id)} className="admin-btn btn-save">✓</button>
+                                                <button onClick={() => setEditingPlayer(null)} className="admin-btn btn-cancel">✕</button>
+                                            </>
                                         ) : (
                                             <>
-                                                <span style={{fontWeight: '600', minWidth: '140px'}}>{player.name}</span>
-                                                <span style={{fontSize: '13px', flex: 1, opacity: 0.7}}>
-                                                    {player.claimed ? `✓ ${player.email}` : '◯ Non reclamato'}
-                                                </span>
-                                                <span style={{fontSize: '13px', opacity: 0.8}}>
-                                                    OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)
-                                                </span>
-                                                <div style={{display: 'flex', gap: '6px'}}>
-                                                    <button onClick={() => handleEditName(player)} className="admin-btn">✏️</button>
-                                                    <button onClick={() => handleEditVotes(player)} className="admin-btn" style={{background: '#48bb78'}}>📊</button>
-                                                    <button onClick={() => handleResetVotes(player.id)} className="admin-btn" style={{background: '#ed8936'}}>🔄</button>
-                                                    <button onClick={() => handleDeletePlayer(player.id)} className="admin-btn" style={{background: 'var(--hot-red)'}}>🗑️</button>
+                                                <span className="player-name">{player.name}</span>
+                                                <span className="player-status">{player.claimed ? `✓ ${player.email}` : '◯ Non reclamato'}</span>
+                                                <span className="player-stats">OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)</span>
+                                                <div className="admin-actions">
+                                                    <button onClick={() => { setEditingPlayer(player.id); setEditName(player.name); }} className="admin-btn">✏️</button>
+                                                    <button onClick={() => handleEditVotes(player)} className="admin-btn btn-chart">📊</button>
+                                                    <button onClick={() => handleDeletePlayer(player.id)} className="admin-btn btn-delete">🗑️</button>
                                                 </div>
                                             </>
                                         )}
@@ -1355,67 +864,42 @@
                             })}
                         </div>
                     </div>
-                    
+
                     <div className="settings-group">
                         <h3>📊 Importa Dati</h3>
-                        <p style={{marginBottom: '15px', opacity: 0.7}}>Importa valutazioni da file CSV</p>
+                        <p>Importa valutazioni da file CSV</p>
                         <button className="btn btn-primary" onClick={() => setShowImport(true)}>📂 Importa CSV</button>
                     </div>
 
-                    {showImport && (
-                        <CSVImportModal 
-                            onClose={() => setShowImport(false)}
-                            onSuccess={() => { setShowImport(false); showSuccessMsg('Dati importati!'); setTimeout(() => window.location.reload(), 1000); }}
-                        />
-                    )}
+                    {showImport && (<CSVImportModal onClose={() => setShowImport(false)} onSuccess={() => { setShowImport(false); showSuccessMsg('Dati importati!'); setTimeout(() => window.location.reload(), 1000); }} />)}
 
-                    <div className="settings-group" style={{background: 'rgba(245, 101, 101, 0.1)', border: '2px solid var(--hot-red)'}}>
-                        <h3 style={{color: 'var(--hot-red)'}}>⚠️ Zona Pericolosa</h3>
-                        <p style={{marginBottom: '15px', opacity: 0.8}}>Azioni irreversibili!</p>
-                        <button className="btn" onClick={handleFullReset} style={{background: 'var(--hot-red)', color: 'white'}}>
-                            🗑️ Reset Completo
-                        </button>
+                    <div className="settings-group admin-danger-zone">
+                        <h3>⚠️ Zona Pericolosa</h3>
+                        <p>Azioni irreversibili!</p>
+                        <button className="btn btn-danger" onClick={handleFullReset}>🗑️ Reset Completo</button>
                     </div>
 
                     {editingVotes && (
                         <div className="modal-overlay">
-                            <div className="modal-content" style={{maxWidth: '700px'}}>
+                            <div className="modal-content modal-large">
                                 <h2>📊 Modifica: {editingVotes.name}</h2>
                                 <p>Inserisci valori 1-4. Verranno creati 8 voti seed.</p>
                                 {['tecniche', 'tattiche', 'fisiche'].map(category => (
-                                    <div key={category} style={{marginBottom: '20px'}}>
-                                        <h4 style={{
-                                            color: category === 'tecniche' ? '#667eea' : category === 'tattiche' ? '#48bb78' : '#f56565',
-                                            marginBottom: '10px',
-                                            textTransform: 'capitalize'
-                                        }}>
-                                            {category}
-                                        </h4>
-                                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px'}}>
+                                    <div key={category} className="vote-edit-category">
+                                        <h4 className={`category-${category}`}>{category}</h4>
+                                        <div className="vote-edit-grid">
                                             {SKILLS[category].map(skill => (
-                                                <div key={skill} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                                    <label style={{flex: 1, fontSize: '13px'}}>{skill}</label>
-                                                    <input 
-                                                        type="number" 
-                                                        min="1" 
-                                                        max="4" 
-                                                        step="0.01" 
-                                                        value={voteValues[skill] || ''} 
-                                                        onChange={(e) => setVoteValues({...voteValues, [skill]: e.target.value})} 
-                                                        style={{width: '70px'}}
-                                                    />
+                                                <div key={skill} className="vote-edit-item">
+                                                    <label>{skill}</label>
+                                                    <input type="number" min="1" max="4" step="0.01" value={voteValues[skill] || ''} onChange={(e) => setVoteValues({...voteValues, [skill]: e.target.value})} />
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 ))}
-                                <div style={{display: 'flex', gap: '15px', marginTop: '20px'}}>
-                                    <button className="btn btn-secondary" onClick={() => {setEditingVotes(null); setVoteValues({});}} style={{flex: 1}}>
-                                        Annulla
-                                    </button>
-                                    <button className="btn btn-primary" onClick={handleSaveVotes} style={{flex: 1}}>
-                                        Salva
-                                    </button>
+                                <div className="modal-actions">
+                                    <button className="btn btn-secondary" onClick={() => setEditingVotes(null)}>Annulla</button>
+                                    <button className="btn btn-primary" onClick={handleSaveVotes}>Salva</button>
                                 </div>
                             </div>
                         </div>
@@ -1425,32 +909,124 @@
         }
 
         function DebugPage({ users, votes }) {
-            // Debug page implementation remains the same as original
-            // Omitted for brevity - copy from original if needed
+            const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+            const getVoteStats = (playerId) => {
+                const playerVotes = votes.filter(v => v.playerId === playerId);
+                const seedVotes = playerVotes.filter(v => v.voterId && v.voterId.startsWith('seed'));
+                const realVotes = playerVotes.filter(v => v.voterId && !v.voterId.startsWith('seed'));
+                return { total: playerVotes.length, seed: seedVotes.length, real: realVotes.length, allVotes: playerVotes };
+            };
+
+            const players = users.filter(u => !u.id.startsWith('seed'));
+
+            if (selectedPlayer) {
+                const player = players.find(p => p.id === selectedPlayer);
+                const stats = getVoteStats(player.id);
+                const averages = utils.calculateAverages(player.id, votes);
+                const overall = utils.calculateOverall(averages);
+
+                return (
+                    <div className="debug-detail">
+                        <div className="debug-header">
+                            <h2>📊 Dettaglio: {player.name}</h2>
+                            <button onClick={() => setSelectedPlayer(null)} className="btn btn-secondary">← Indietro</button>
+                        </div>
+
+                        <div className="debug-stats">
+                            <div className="debug-stat-box"><div className="stat-value seed">{stats.seed}</div><div className="stat-label">Voti Seed</div></div>
+                            <div className="debug-stat-box"><div className="stat-value real">{stats.real}</div><div className="stat-label">Voti Reali</div></div>
+                            <div className="debug-stat-box"><div className="stat-value total">{stats.total}</div><div className="stat-label">Totale</div></div>
+                            <div className="debug-stat-box"><div className="stat-value overall">{overall ? utils.toBase10(overall).toFixed(2) : '-'}</div><div className="stat-label">Overall</div></div>
+                        </div>
+
+                        <h3>🗳️ Tutti i Voti</h3>
+                        <div className="debug-table-wrapper">
+                            <table className="debug-table">
+                                <thead>
+                                    <tr>
+                                        <th>Votante</th>
+                                        <th>Tipo</th>
+                                        {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => (<th key={skill}>{skill.substring(0, 6)}</th>))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stats.allVotes.map((vote, index) => {
+                                        const isSeed = vote.voterId.startsWith('seed');
+                                        const voterName = isSeed ? '🤖 Seed' : (users.find(u => u.id === vote.voterId)?.name || 'Sconosciuto');
+                                        return (
+                                            <tr key={index} className={index % 2 === 0 ? 'even' : 'odd'}>
+                                                <td>{voterName}</td>
+                                                <td><span className={`vote-type ${isSeed ? 'seed' : 'real'}`}>{isSeed ? 'Seed' : 'Reale'}</span></td>
+                                                {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => (<td key={skill}>{vote.ratings[skill] || '-'}</td>))}
+                                            </tr>
+                                        );
+                                    })}
+                                    <tr className="average-row">
+                                        <td>📊 MEDIA</td>
+                                        <td></td>
+                                        {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => {
+                                            const skillVotes = stats.allVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
+                                            const avg = skillVotes.length > 0 ? skillVotes.reduce((a, b) => a + b, 0) / skillVotes.length : 0;
+                                            return (<td key={skill}>{avg > 0 ? `${avg.toFixed(2)}` : '-'}</td>);
+                                        })}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
-                <div style={{maxWidth: '1200px', margin: '0 auto'}}>
-                    <h2 style={{marginBottom: '30px'}}>🐛 Debug - Riepilogo Voti</h2>
-                    <div className="no-votes">
-                        <h3>Debug page</h3>
-                        <p>Implementazione completa disponibile nel file originale</p>
+                <div className="debug-section">
+                    <h2>🐛 Debug - Riepilogo Voti</h2>
+
+                    <div className="debug-global-stats">
+                        <div className="debug-stat-box"><div className="stat-value seed">{votes.filter(v => v.voterId && v.voterId.startsWith('seed')).length}</div><div className="stat-label">Voti Seed Totali</div></div>
+                        <div className="debug-stat-box"><div className="stat-value real">{votes.filter(v => v.voterId && !v.voterId.startsWith('seed')).length}</div><div className="stat-label">Voti Reali Totali</div></div>
+                        <div className="debug-stat-box"><div className="stat-value total">{votes.length}</div><div className="stat-label">Voti Totali</div></div>
+                    </div>
+
+                    <div className="settings-group">
+                        <h3>👥 Dettaglio per Giocatore</h3>
+                        <div className="debug-player-list">
+                            {players.map(player => {
+                                const stats = getVoteStats(player.id);
+                                const averages = utils.calculateAverages(player.id, votes);
+                                const overall = utils.calculateOverall(averages);
+                                return (
+                                    <div key={player.id} className="debug-player-item">
+                                        <div className="player-name">{player.name}</div>
+                                        <div className="vote-stats">
+                                            <span className="seed">Seed: {stats.seed}</span>
+                                            <span className="real">Reali: {stats.real}</span>
+                                            <span className="total">Tot: {stats.total}</span>
+                                            <span className="overall">OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'}</span>
+                                        </div>
+                                        <button onClick={() => setSelectedPlayer(player.id)} className="btn btn-primary btn-small">🔍 Dettagli</button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="debug-note">
+                        <h3>⚠️ Note</h3>
+                        <ul>
+                            <li><strong>Voti Seed:</strong> Voti inseriti dall'Admin (dovrebbero essere 8 per giocatore)</li>
+                            <li><strong>Voti Reali:</strong> Voti dati da altri utenti dell'app</li>
+                            <li><strong>Overall:</strong> Media di tutte le skill (scala 1-10)</li>
+                            <li>Clicca su "🔍 Dettagli" per vedere tutti i voti e i calcoli delle medie</li>
+                        </ul>
                     </div>
                 </div>
             );
         }
 
-/* ============================================================================
-   SEZIONE 15: COMPONENTE APP (PRINCIPALE)
-   ============================================================================ */
-
         function App() {
             const getPendingEmail = () => sessionStorage.getItem('pendingEmail');
-            const setPendingEmailStorage = (email) => {
-                if (email) {
-                    sessionStorage.setItem('pendingEmail', email);
-                } else {
-                    sessionStorage.removeItem('pendingEmail');
-                }
-            };
+            const setPendingEmailStorage = (email) => { if (email) { sessionStorage.setItem('pendingEmail', email); } else { sessionStorage.removeItem('pendingEmail'); } };
 
             const [currentUser, setCurrentUser] = useState(storage.getCurrentUser());
             const [activeTab, setActiveTab] = useState('valuta');
@@ -1468,13 +1044,8 @@
                     setLoading(true);
                     try {
                         let loadedUsers = await storage.getUsers();
-                        
-                        if (loadedUsers.length === 0) {
-                            loadedUsers = [];
-                        }
-                        
+                        if (loadedUsers.length === 0) { loadedUsers = []; }
                         const loadedVotes = await storage.getVotes();
-                        
                         setUsers(loadedUsers);
                         setVotes(loadedVotes);
                     } catch (error) {
@@ -1482,18 +1053,15 @@
                     }
                     setLoading(false);
                 };
-                
                 loadData();
             }, []);
 
             useEffect(() => {
                 if (loading || currentUser) return;
-
                 const unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
                     if (firebaseUser && firebaseUser.email) {
                         const email = firebaseUser.email;
                         const existingUser = users.find(u => u.email === email);
-                        
                         if (existingUser) {
                             const userWithAdmin = { ...existingUser, isAdmin: email === ADMIN_EMAIL };
                             setCurrentUser(userWithAdmin);
@@ -1505,7 +1073,6 @@
                         }
                     }
                 });
-
                 return () => unsubscribe();
             }, [loading, users, currentUser]);
 
@@ -1526,9 +1093,7 @@
             const handleClaimProfile = async (playerId) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
                 const claimedUser = { ...users.find(u => u.id === playerId), email: pendingEmail, claimed: true, isAdmin };
-                
                 await storage.updateUser(claimedUser);
-                
                 const updatedUsers = users.map(u => u.id === playerId ? claimedUser : u);
                 setUsers(updatedUsers);
                 setCurrentUser(claimedUser);
@@ -1541,21 +1106,8 @@
 
             const handleNewPlayer = async (playerName) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
-                const newUser = { 
-                    id: `player${users.length + 1}`, 
-                    name: playerName || pendingEmail.split('@')[0],
-                    email: pendingEmail,
-                    avatar: null,
-                    preferredRole: null,
-                    otherRoles: [],
-                    claimed: true,
-                    isAdmin: isAdmin,
-                    isInitialPlayer: false,
-                    hasVotedOffline: false
-                };
-                
+                const newUser = { id: `player${users.length + 1}`, name: playerName || pendingEmail.split('@')[0], email: pendingEmail, avatar: null, preferredRole: null, otherRoles: [], claimed: true, isAdmin: isAdmin, isInitialPlayer: false, hasVotedOffline: false };
                 await storage.updateUser(newUser);
-                
                 setUsers([...users, newUser]);
                 setCurrentUser(newUser);
                 storage.setCurrentUser(newUser);
@@ -1565,34 +1117,18 @@
                 setShowRoleModal(true);
             };
 
-            const handleLogout = () => {
-                firebase.auth().signOut();
-                setCurrentUser(null);
-                storage.setCurrentUser(null);
-            };
+            const handleLogout = () => { firebase.auth().signOut(); setCurrentUser(null); storage.setCurrentUser(null); };
 
             const handleVoteSubmit = async (playerId, ratings) => {
-                const newVote = { 
-                    voterId: currentUser.id, 
-                    voterName: currentUser.name,
-                    voterEmail: currentUser.email,
-                    playerId, 
-                    ratings, 
-                    timestamp: Date.now(),
-                    date: new Date().toISOString()
-                };
-                
+                const newVote = { voterId: currentUser.id, voterName: currentUser.name, voterEmail: currentUser.email, playerId, ratings, timestamp: Date.now(), date: new Date().toISOString() };
                 await storage.addVote(newVote);
-                
                 setVotes([...votes, newVote]);
                 setSelectedPlayer(null);
             };
 
             const handleRolesSave = async (preferredRole, otherRoles) => {
                 const updatedCurrentUser = { ...currentUser, preferredRole, otherRoles };
-                
                 await storage.updateUser(updatedCurrentUser);
-                
                 const updatedUsers = users.map(u => u.id === currentUser.id ? updatedCurrentUser : u);
                 setUsers(updatedUsers);
                 setCurrentUser(updatedCurrentUser);
@@ -1601,31 +1137,17 @@
             };
 
             if (loading) {
-                return (
-                    <div className="login-container">
-                        <div className="login-card">
-                            <h1>⚽ Calcetto Rating</h1>
-                            <p>Caricamento in corso...</p>
-                        </div>
-                    </div>
-                );
+                return (<div className="login-container"><div className="login-card"><h1>⚽ Calcetto Rating</h1><p>Caricamento in corso...</p></div></div>);
             }
 
             if (!currentUser) {
-                return (
-                    <>
-                        <LoginPage onLogin={handleLogin} />
-                        {showClaimModal && <ClaimProfileModal users={users} onClaim={handleClaimProfile} onNewPlayer={handleNewPlayer} />}
-                    </>
-                );
+                return (<>{showClaimModal && <ClaimProfileModal users={users} onClaim={handleClaimProfile} onNewPlayer={handleNewPlayer} />}<LoginPage onLogin={handleLogin} /></>);
             }
 
             return (
                 <div className="app-container">
                     {showRoleModal && <RoleSelectionModal onSave={handleRolesSave} />}
-                    
                     <Header user={currentUser} onLogout={handleLogout} />
-                    
                     <div className="nav-tabs">
                         <button className={`nav-tab ${activeTab === 'valuta' ? 'active' : ''}`} onClick={() => { setActiveTab('valuta'); setSelectedPlayer(null); setViewingProfile(null); }}>⚽ Valuta</button>
                         <button className={`nav-tab ${activeTab === 'profilo' ? 'active' : ''}`} onClick={() => { setActiveTab('profilo'); setSelectedPlayer(null); setViewingProfile(null); }}>👤 Profilo</button>
@@ -1634,15 +1156,9 @@
                         {currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => { setActiveTab('admin'); setSelectedPlayer(null); setViewingProfile(null); }}>🔧 Admin</button>}
                         {currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'debug' ? 'active' : ''}`} onClick={() => { setActiveTab('debug'); setSelectedPlayer(null); setViewingProfile(null); }}>🐛 Debug</button>}
                     </div>
-                    
                     <div className="content">
                         {viewingProfile ? (
-                            <div>
-                                <button className="btn btn-secondary" onClick={() => setViewingProfile(null)} style={{marginBottom: '20px'}}>
-                                    ← Indietro
-                                </button>
-                                <PlayerProfile player={users.find(u => u.id === viewingProfile)} votes={votes} isOwnProfile={viewingProfile === currentUser.id} />
-                            </div>
+                            <><button className="btn btn-secondary back-btn" onClick={() => setViewingProfile(null)}>← Indietro</button><PlayerProfile player={users.find(u => u.id === viewingProfile)} votes={votes} isOwnProfile={viewingProfile === currentUser.id} /></>
                         ) : selectedPlayer ? (
                             <RatingForm player={users.find(u => u.id === selectedPlayer)} onSubmit={handleVoteSubmit} onCancel={() => setSelectedPlayer(null)} />
                         ) : activeTab === 'valuta' ? (
@@ -1656,16 +1172,7 @@
                         ) : activeTab === 'debug' && currentUser.isAdmin ? (
                             <DebugPage users={users} votes={votes} />
                         ) : (
-                            <SettingsPage 
-                                user={currentUser} 
-                                onUpdateUser={async (updatedUser) => {
-                                    await storage.updateUser(updatedUser);
-                                    const updatedUsers = users.map(u => u.id === updatedUser.id ? updatedUser : u);
-                                    setUsers(updatedUsers);
-                                    setCurrentUser(updatedUser);
-                                    storage.setCurrentUser(updatedUser);
-                                }}
-                            />
+                            <SettingsPage user={currentUser} onUpdateUser={async (updatedUser) => { await storage.updateUser(updatedUser); const updatedUsers = users.map(u => u.id === updatedUser.id ? updatedUser : u); setUsers(updatedUsers); setCurrentUser(updatedUser); storage.setCurrentUser(updatedUser); }} />
                         )}
                     </div>
                 </div>
@@ -1677,7 +1184,6 @@
         } catch (error) {
             document.getElementById('root').innerHTML = '<div style="color:white;text-align:center;padding:50px;"><h2>Errore caricamento</h2><p>' + error.message + '</p></div>';
         }
-
     </script>
 </body>
 </html>
