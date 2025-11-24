@@ -194,22 +194,16 @@ const handleGoogleLogin = () => {
                 
                 const provider = new firebase.auth.GoogleAuthProvider();
                 
-                // Usa redirect su mobile, popup su desktop
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                
-                if (isMobile) {
-                    firebase.auth().signInWithRedirect(provider);
-                } else {
-                    firebase.auth().signInWithPopup(provider)
-                        .then((result) => {
-                            onLogin(result.user.email);
-                        })
-                        .catch((err) => {
-                            console.error(err);
-                            setError('Errore: ' + err.message);
-                            setLoading(false);
-                        });
-                }
+                // Usa sempre popup, sia mobile che desktop
+                firebase.auth().signInWithPopup(provider)
+                    .then((result) => {
+                        onLogin(result.user.email);
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        setError('Errore: ' + err.message);
+                        setLoading(false);
+                    });
             };
 
 	
@@ -1956,64 +1950,12 @@ const handleGoogleLogin = () => {
                 loadData();
             }, []);
 
-// Gestisce autenticazione (redirect + popup)
+// Gestisce autenticazione
             useEffect(() => {
-                if (loading) return;
-                if (currentUser) return;
+                if (loading || currentUser) return;
 
-                let authProcessed = false;
-
-                // PASSO 1: Controlla prima se c'è un redirect result (mobile)
-                firebase.auth().getRedirectResult()
-                    .then((result) => {
-                        if (result.user && !authProcessed) {
-                            authProcessed = true;
-                            const email = result.user.email;
-                            
-                            console.log('🔵 Redirect result:', email);
-                            
-                            const existingUser = users.find(u => u.email === email);
-                            
-                            if (existingUser) {
-                                console.log('✅ Utente esistente, login diretto');
-                                const userWithAdmin = { ...existingUser, isAdmin: email === ADMIN_EMAIL };
-                                setCurrentUser(userWithAdmin);
-                                storage.setCurrentUser(userWithAdmin);
-                                setPendingEmailStorage(null);
-                                if (!existingUser.preferredRole) setShowRoleModal(true);
-                            } else {
-                                console.log('🆕 Nuovo utente, mostra modal');
-                                setPendingEmail(email);
-                                setPendingEmailStorage(email);
-                                setShowClaimModal(true);
-                            }
-                        } else if (!result.user) {
-                            // Nessun redirect result, controlla se c'è pendingEmail salvato
-                            const savedPendingEmail = getPendingEmail();
-                            if (savedPendingEmail) {
-                                console.log('💾 Trovato pendingEmail salvato:', savedPendingEmail);
-                                setPendingEmail(savedPendingEmail);
-                                setShowClaimModal(true);
-                            }
-                        }
-                    })
-                    .catch((err) => {
-                        console.error('❌ Redirect error:', err);
-                    });
-
-                // PASSO 2: onAuthStateChanged come fallback (per popup desktop)
                 const unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
-                    if (firebaseUser && firebaseUser.email && !authProcessed && !currentUser) {
-                        console.log('🟢 onAuthStateChanged:', firebaseUser.email);
-                        
-                        // Se abbiamo già un pendingEmail, non fare nulla
-                        // (significa che siamo in attesa che l'utente scelga profilo)
-                        if (pendingEmail) {
-                            console.log('⏸️ PendingEmail già presente, skip');
-                            return;
-                        }
-                        
-                        authProcessed = true;
+                    if (firebaseUser && firebaseUser.email) {
                         const email = firebaseUser.email;
                         const existingUser = users.find(u => u.email === email);
                         
@@ -2021,11 +1963,9 @@ const handleGoogleLogin = () => {
                             const userWithAdmin = { ...existingUser, isAdmin: email === ADMIN_EMAIL };
                             setCurrentUser(userWithAdmin);
                             storage.setCurrentUser(userWithAdmin);
-                            setPendingEmailStorage(null);
                             if (!existingUser.preferredRole) setShowRoleModal(true);
                         } else {
                             setPendingEmail(email);
-                            setPendingEmailStorage(email);
                             setShowClaimModal(true);
                         }
                     }
