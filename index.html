@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calcetto Rating App - Versione Lancio 1.0</title>
+    <title>Calcetto Rating App v3</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -148,7 +148,7 @@
                 <div className="login-container">
                     <div className="login-card">
                         <h1>⚽ Calcetto Rating</h1>
-                        <p>Valuta i tuoi compagni di gioco</p>
+                        <p>Valuta i tuoi compagni di squadra</p>
                         {error && <p className="error-message">{error}</p>}
                         <button className="google-btn" onClick={handleGoogleLogin} disabled={loading}>
                             <span>🔐</span>
@@ -579,80 +579,6 @@ function ClassifichePage({ users, votes, onViewProfile }) {
                     ))}
                 </div>
             )}
-        </div>
-    );
-}
-
-function RoleEditModal({ user, onClose, onSuccess }) {
-    const [preferredRole, setPreferredRole] = useState(user.preferredRole || '');
-    const [otherRoles, setOtherRoles] = useState(user.otherRoles || []);
-
-    const handleOtherRoleToggle = (role) => {
-        if (otherRoles.includes(role)) {
-            setOtherRoles(otherRoles.filter(r => r !== role));
-        } else {
-            setOtherRoles([...otherRoles, role]);
-        }
-    };
-
-    const handleSubmit = async () => {
-        if (!preferredRole) {
-            alert('Seleziona il tuo ruolo preferito');
-            return;
-        }
-        if (otherRoles.length < 2) {
-            alert('Seleziona almeno 2 altri ruoli');
-            return;
-        }
-
-        const updatedUser = { ...user, preferredRole, otherRoles };
-        await storage.updateUser(updatedUser);
-        onSuccess(updatedUser);
-    };
-
-    const availableOtherRoles = ROLES.filter(r => r !== preferredRole);
-
-    return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h2>✏️ Modifica Ruoli</h2>
-                <p>Aggiorna i tuoi ruoli preferiti</p>
-                <div className="form-group">
-                    <label>Qual è il tuo ruolo preferito? *</label>
-                    <select value={preferredRole} onChange={(e) => setPreferredRole(e.target.value)}>
-                        <option value="">-- Seleziona --</option>
-                        {ROLES.map(role => (<option key={role} value={role}>{role}</option>))}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label>In quali altri ruoli ti adatti? (min. 2) *</label>
-                    <div className="checkbox-group">
-                        {availableOtherRoles.map(role => (
-                            <div key={role} className="checkbox-item">
-                                <input 
-                                    type="checkbox" 
-                                    id={`edit-role-${role}`} 
-                                    checked={otherRoles.includes(role)} 
-                                    onChange={() => handleOtherRoleToggle(role)} 
-                                />
-                                <label htmlFor={`edit-role-${role}`}>{role}</label>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="modal-actions">
-                    <button className="btn btn-secondary" onClick={onClose}>
-                        Annulla
-                    </button>
-                    <button 
-                        className={`btn btn-primary ${(!preferredRole || otherRoles.length < 2) ? 'btn-disabled' : ''}`} 
-                        onClick={handleSubmit} 
-                        disabled={!preferredRole || otherRoles.length < 2}
-                    >
-                        Conferma {otherRoles.length < 2 && preferredRole ? `(${otherRoles.length}/2 ruoli)` : ''}
-                    </button>
-                </div>
-            </div>
         </div>
     );
 }
