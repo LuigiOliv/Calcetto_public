@@ -267,42 +267,45 @@
         }
 
         function PlayersListPage({ users, currentUser, votes, onSelectPlayer }) {
-            const hasVoted = (playerId) => {
-                return votes.some(v => v.voterId === currentUser.id && v.playerId === playerId);
-            };
+    const hasVoted = (playerId) => {
+        return votes.some(v => v.voterId === currentUser.id && v.playerId === playerId);
+    };
+    
+    const playersToVote = users.filter(u => {
+        if (u.id === currentUser.id || u.id.startsWith('seed')) return false;
+        if (hasVoted(u.id)) return false;
+        if (currentUser.hasVotedOffline && u.isInitialPlayer) return false;
+        return true;
+    });
 
-            const playersToVote = users.filter(u => {
-                if (u.id === currentUser.id || u.id.startsWith('seed')) return false;
-                if (hasVoted(u.id)) return false;
-                if (currentUser.hasVotedOffline && u.isInitialPlayer) return false;
-                return true;
-            });
-
-            return (
-                <div>
-                    <h2>Seleziona un giocatore da valutare</h2>
-                    {playersToVote.length === 0 ? (
-                        <div className="no-votes">
-                            <h3>🎉 Ottimo lavoro, hai valutato tutti!</h3>
-                            {currentUser.hasVotedOffline && <p>Hai già votato tutti. Potrai votare i nuovi iscritti.</p>}
-                        </div>
-                    ) : (
-                        <div className="players-grid">
-                            {playersToVote.map(player => (
-                                <div key={player.id} className="player-card" onClick={() => onSelectPlayer(player.id)}>
-                                    <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
-                                    <h3>{player.name}</h3>
-                                    <div className="status">
-                                        {!player.isInitialPlayer && <span className="new-badge">⭐ NUOVO</span>}
-                                        <div>Clicca per valutare</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+    return (
+        <div className="section-container">
+            <div className="section-header">
+                <h2>Seleziona un giocatore da valutare</h2>
+            </div>
+            
+            {playersToVote.length === 0 ? (
+                <div className="no-votes">
+                    <h3>🎉 Ottimo lavoro, hai valutato tutti!</h3>
+                    {currentUser.hasVotedOffline && <p>Hai già votato tutti. Potrai votare i nuovi iscritti.</p>}
                 </div>
-            );
-        }
+            ) : (
+                <div className="players-grid">
+                    {playersToVote.map(player => (
+                        <div key={player.id} className="player-card" onClick={() => onSelectPlayer(player.id)}>
+                            <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
+                            <h3>{player.name}</h3>
+                            <div className="status">
+                                {!player.isInitialPlayer && <span className="new-badge">⭐ NUOVO</span>}
+                                <div>Clicca per valutare</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
         function RatingForm({ player, onSubmit, onCancel }) {
             const [ratings, setRatings] = useState({});
@@ -435,7 +438,11 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
     };
 
     return (
-        <div className="profile-container">
+        <div className="section-container">
+            <div className="section-header">
+                <h2>Profilo Giocatore</h2>
+            </div>
+            
             <div className="profile-header">
                 <div className="avatar profile-avatar">
                     {player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}
@@ -443,7 +450,7 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
                 
                 <div className="profile-header-info">
                     <h2>{player.name}</h2>
-                    <div className="votes-count">Sulla base di {voteCount} valutazioni ricevute</div>
+                    <div className="votes-count">{voteCount} match data points</div>
                 </div>
                 
                 {(player.preferredRole || (player.otherRoles && player.otherRoles.length > 0)) && (
@@ -474,50 +481,48 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
             )}
 
             {hasEnoughVotes && averages ? (
-                <>
-                    <div className="charts-container">
-                        {Object.entries(SKILLS).map(([category, skills]) => {
-                            const catOverall = utils.calculateCategoryOverall(averages, category);
-                            return (
-                                <div 
-                                    key={category} 
-                                    className={`chart-box ${flippedCard === category ? 'flipped' : ''}`}
-                                    onClick={() => handleCardClick(category)}
-                                >
-                                    <div className="chart-box-inner">
-                                        <div className="chart-box-front">
-                                            <h3 className={`category-${category}`}>
-                                                {category.charAt(0).toUpperCase() + category.slice(1)}
-                                            </h3>
-                                            {catOverall && (
-                                                <div className="category-overall">
-                                                    {utils.toBase10(catOverall).toFixed(2)}
-                                                </div>
-                                            )}
-                                            <RadarChart data={averages} labels={skills} category={category} />
-                                        </div>
-                                        
-                                        <div className="chart-box-back">
-                                            <h4 className={`category-${category}`}>
-                                                {category.charAt(0).toUpperCase() + category.slice(1)}
-                                            </h4>
-                                            <div className="chart-detail-list">
-                                                {skills.map(skill => (
-                                                    <div key={skill} className="chart-detail-item">
-                                                        <span>{skill}</span>
-                                                        <span className={`category-${category}`}>
-                                                            {averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}
-                                                        </span>
-                                                    </div>
-                                                ))}
+                <div className="charts-container">
+                    {Object.entries(SKILLS).map(([category, skills]) => {
+                        const catOverall = utils.calculateCategoryOverall(averages, category);
+                        return (
+                            <div 
+                                key={category} 
+                                className={`chart-box ${flippedCard === category ? 'flipped' : ''}`}
+                                onClick={() => handleCardClick(category)}
+                            >
+                                <div className="chart-box-inner">
+                                    <div className="chart-box-front">
+                                        <h3 className={`category-${category}`}>
+                                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                                        </h3>
+                                        {catOverall && (
+                                            <div className="category-overall">
+                                                {utils.toBase10(catOverall).toFixed(2)}
                                             </div>
+                                        )}
+                                        <RadarChart data={averages} labels={skills} category={category} />
+                                    </div>
+                                    
+                                    <div className="chart-box-back">
+                                        <h4 className={`category-${category}`}>
+                                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                                        </h4>
+                                        <div className="chart-detail-list">
+                                            {skills.map(skill => (
+                                                <div key={skill} className="chart-detail-item">
+                                                    <span>{skill}</span>
+                                                    <span className={`category-${category}`}>
+                                                        {averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </>
+                            </div>
+                        );
+                    })}
+                </div>
             ) : (
                 <div className="no-votes">
                     <h3>📊 Grafici non disponibili</h3>
@@ -528,657 +533,527 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
         </div>
     );
 }
+function ClassifichePage({ users, votes, onViewProfile }) {
+    const playersWithStats = users
+        .filter(u => !u.id.startsWith('seed'))
+        .map(player => {
+            const averages = utils.calculateAverages(player.id, votes);
+            const overall = utils.calculateOverall(averages);
+            const voteCount = utils.countVotes(player.id, votes);
+            return { ...player, overall, voteCount };
+        })
+        .filter(p => p.overall !== null)
+        .sort((a, b) => b.overall - a.overall);
 
-        function ClassifichePage({ users, votes, onViewProfile }) {
-            const playersWithStats = users
-                .filter(u => !u.id.startsWith('seed'))
-                .map(player => {
-                    const averages = utils.calculateAverages(player.id, votes);
-                    const overall = utils.calculateOverall(averages);
-                    const voteCount = utils.countVotes(player.id, votes);
-                    return { ...player, overall, voteCount };
-                })
-                .filter(p => p.overall !== null)
-                .sort((a, b) => b.overall - a.overall);
-
-            return (
-                <div>
-                    <h2>📊 Classifica Generale</h2>
-                    {playersWithStats.length === 0 ? (
-                        <div className="no-votes">
-                            <h3>Nessuna classifica disponibile</h3>
-                            <p>I giocatori devono ricevere almeno 5 valutazioni per apparire</p>
-                        </div>
-                    ) : (
-                        <div className="leaderboard-container">
-                            {playersWithStats.map((player, index) => (
-                                <div key={player.id} onClick={() => onViewProfile(player.id)} className={`leaderboard-item ${index < 3 ? 'podium' : ''} rank-${index + 1}`}>
-                                    <div className="rank-number">{index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}</div>
-                                    <div className="avatar leaderboard-avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
-                                    <div className="player-info">
-                                        <div className="player-name">{player.name}</div>
-                                        <div className="player-votes">{player.voteCount} valutazioni</div>
-                                    </div>
-                                    <div className="overall-score">{utils.toBase10(player.overall).toFixed(2)}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+    return (
+        <div className="section-container">
+            <div className="section-header">
+                <h2>📊 Classifica Generale</h2>
+            </div>
+            
+            {playersWithStats.length === 0 ? (
+                <div className="no-votes">
+                    <h3>Nessuna classifica disponibile</h3>
+                    <p>I giocatori devono ricevere almeno 5 valutazioni per apparire</p>
                 </div>
-            );
-        }
+            ) : (
+                <div className="leaderboard-container">
+                    {playersWithStats.map((player, index) => (
+                        <div 
+                            key={player.id}
+                            className={`leaderboard-item ${index < 3 ? `rank-${index + 1}` : ''}`}
+                            onClick={() => onViewProfile(player.id)}
+                        >
+                            <div className="rank-number">
+                                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                            </div>
+                            <div className="avatar">
+                                {player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}
+                            </div>
+                            <div style={{flex: 1}}>
+                                <div style={{fontWeight: '600', fontSize: '18px'}}>{player.name}</div>
+                                <div style={{fontSize: '13px', opacity: 0.8}}>{player.voteCount} valutazioni</div>
+                            </div>
+                            <div style={{fontWeight: '800', fontSize: '28px'}}>{utils.toBase10(player.overall).toFixed(2)}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
-        function SettingsPage({ user, onUpdateUser }) {
-            const [isEditing, setIsEditing] = useState(false);
-            const [editName, setEditName] = useState(user.name);
-            const [editAvatar, setEditAvatar] = useState(user.avatar);
-            const [editPreferredRole, setEditPreferredRole] = useState(user.preferredRole || '');
-            const [editOtherRoles, setEditOtherRoles] = useState(user.otherRoles || []);
-            const [saving, setSaving] = useState(false);
-            const [showSuccess, setShowSuccess] = useState(false);
+function SettingsPage({ user, onAvatarUpdate }) {
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showRoleEdit, setShowRoleEdit] = useState(false);
 
-            const handleAvatarChange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => { setEditAvatar(reader.result); };
-                    reader.readAsDataURL(file);
-                }
-            };
-
-            const handleOtherRoleToggle = (role) => {
-                if (editOtherRoles.includes(role)) {
-                    setEditOtherRoles(editOtherRoles.filter(r => r !== role));
-                } else {
-                    setEditOtherRoles([...editOtherRoles, role]);
-                }
-            };
-
-            const handleSave = async () => {
-                if (!editName.trim()) { alert('Il nome non può essere vuoto'); return; }
-                if (!editPreferredRole) { alert('Seleziona il tuo ruolo preferito'); return; }
-                if (editOtherRoles.length < 2) { alert('Seleziona almeno 2 altri ruoli'); return; }
-
-                setSaving(true);
-                await onUpdateUser({ ...user, name: editName.trim(), avatar: editAvatar, preferredRole: editPreferredRole, otherRoles: editOtherRoles });
-                setSaving(false);
-                setIsEditing(false);
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                onAvatarUpdate(reader.result);
                 setShowSuccess(true);
                 setTimeout(() => setShowSuccess(false), 3000);
             };
+            reader.readAsDataURL(file);
+        }
+    };
 
-            const handleCancel = () => {
-                setEditName(user.name);
-                setEditAvatar(user.avatar);
-                setEditPreferredRole(user.preferredRole || '');
-                setEditOtherRoles(user.otherRoles || []);
-                setIsEditing(false);
-            };
-
-            const availableOtherRoles = ROLES.filter(r => r !== editPreferredRole);
-
-            return (
-                <div className="settings-section">
-                    <div className="settings-header">
-                        <h2>⚙️ Impostazioni</h2>
-                        {!isEditing && (<button onClick={() => setIsEditing(true)} className="btn btn-primary">✏️ Modifica</button>)}
+    return (
+        <div className="section-container">
+            <div className="section-header">
+                <h2>⚙️ Impostazioni</h2>
+            </div>
+            
+            <div className="settings-group">
+                <h3>Foto Profilo</h3>
+                <div style={{display: 'flex', alignItems: 'center', gap: '30px', flexWrap: 'wrap'}}>
+                    <div className="avatar" style={{width: '100px', height: '100px', fontSize: '40px'}}>
+                        {user.avatar ? <img src={user.avatar} alt={user.name} /> : utils.getInitials(user.name)}
                     </div>
+                    <div className="file-input-wrapper">
+                        <input type="file" id="avatar-upload" accept="image/*" onChange={handleFileChange} />
+                        <label htmlFor="avatar-upload" className="file-input-label">📷 Carica Foto</label>
+                    </div>
+                </div>
+            </div>
 
-                    {showSuccess && (<div className="success-message">✓ Modifiche salvate con successo!</div>)}
+            <div className="settings-group">
+                <h3>Informazioni Account</h3>
+                <div style={{background: '#f7fafc', padding: '20px', borderRadius: '10px'}}>
+                    <div style={{marginBottom: '15px'}}><strong>Nome:</strong> {user.name}</div>
+                    <div><strong>Email:</strong> {user.email}</div>
+                </div>
+            </div>
 
-                    <div className="settings-group">
-                        <h3>👤 Profilo</h3>
-                        <div className="avatar-section">
-                            <div className="avatar settings-avatar">{(isEditing ? editAvatar : user.avatar) ? <img src={isEditing ? editAvatar : user.avatar} alt={user.name} /> : utils.getInitials(isEditing ? editName : user.name)}</div>
-                            <div>
-                                <div className="settings-text-muted">Foto profilo</div>
-                                {isEditing ? (
-                                    <div className="settings-text-value">
-                                        <label className="file-input-label">
-                                            📷 Carica Foto
-                                            <input type="file" accept="image/*" onChange={handleAvatarChange} />
-                                        </label>
+            <div className="settings-group">
+                <h3>Ruoli</h3>
+                <div style={{background: '#f7fafc', padding: '20px', borderRadius: '10px'}}>
+                    <div style={{marginBottom: '15px'}}>
+                        <strong>Ruolo preferito:</strong> {user.preferredRole || 'Non impostato'}
+                    </div>
+                    <div style={{marginBottom: '15px'}}>
+                        <strong>Altri ruoli:</strong>
+                        <div style={{marginTop: '8px'}}>
+                            {user.otherRoles && user.otherRoles.length > 0 ? (
+                                <div className="role-badges">
+                                    {user.otherRoles.map(role => (
+                                        <span key={role} className="role-badge">{role}</span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <span style={{color: '#718096'}}>Nessuno</span>
+                            )}
+                        </div>
+                    </div>
+                    <button className="btn btn-secondary" onClick={() => setShowRoleEdit(true)} style={{marginTop: '10px'}}>
+                        ✏️ Modifica Ruoli
+                    </button>
+                </div>
+            </div>
+
+            {showSuccess && <div className="success-message">✓ Impostazioni aggiornate!</div>}
+
+            {showRoleEdit && (
+                <RoleEditModal 
+                    user={user}
+                    onClose={() => setShowRoleEdit(false)}
+                    onSuccess={() => { setShowRoleEdit(false); setShowSuccess(true); setTimeout(() => setShowSuccess(false), 3000); }}
+                />
+            )}
+        </div>
+    );
+}
+
+
+function AdminPage({ users, setUsers, votes, setVotes }) {
+    const [editingPlayer, setEditingPlayer] = useState(null);
+    const [editName, setEditName] = useState('');
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [editingVotes, setEditingVotes] = useState(null);
+    const [voteValues, setVoteValues] = useState({});
+
+    const showSuccessMsg = (msg) => {
+        setSuccessMessage(msg);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+    };
+
+    const handleEditName = (player) => {
+        setEditingPlayer(player.id);
+        setEditName(player.name);
+    };
+
+    const handleSaveName = async (playerId) => {
+        if (!editName.trim()) return;
+        const updatedUser = users.find(u => u.id === playerId);
+        updatedUser.name = editName.trim();
+        await storage.updateUser(updatedUser);
+        const updatedUsers = users.map(u => u.id === playerId ? updatedUser : u);
+        setUsers(updatedUsers);
+        setEditingPlayer(null);
+        setEditName('');
+        showSuccessMsg('Nome aggiornato!');
+    };
+
+    const handleDeletePlayer = async (playerId) => {
+        if (!confirm('Eliminare questo giocatore e tutte le sue valutazioni?')) return;
+        const updatedUsers = users.filter(u => u.id !== playerId);
+        setUsers(updatedUsers);
+        await storage.setUsers(updatedUsers);
+        showSuccessMsg('Giocatore eliminato!');
+    };
+
+    const handleEditVotes = (player) => {
+        const averages = utils.calculateAverages(player.id, votes);
+        if (averages) {
+            const values = {};
+            Object.keys(averages).forEach(k => { values[k] = averages[k].toFixed(2); });
+            setVoteValues(values);
+        } else {
+            const emptyValues = {};
+            [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => { emptyValues[skill] = ''; });
+            setVoteValues(emptyValues);
+        }
+        setEditingVotes(player);
+    };
+
+    const handleSaveVotes = async () => {
+        for (let i = 0; i < 8; i++) {
+            const seedVote = { 
+                voterId: `seed_admin_${i}_${Date.now()}`, 
+                playerId: editingVotes.id, 
+                ratings: {}, 
+                timestamp: Date.now() 
+            };
+            [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => {
+                const value = parseFloat(voteValues[skill]);
+                if (!isNaN(value)) seedVote.ratings[skill] = Math.round(value);
+            });
+            await storage.addVote(seedVote);
+        }
+        setEditingVotes(null);
+        setVoteValues({});
+        showSuccessMsg('Valutazioni aggiornate!');
+        setTimeout(() => window.location.reload(), 1000);
+    };
+
+    const handleAddPlayer = async () => {
+        const newName = prompt('Nome del nuovo giocatore:');
+        if (!newName || !newName.trim()) return;
+        const newPlayer = { id: `player${Date.now()}`, name: newName.trim(), avatar: null, preferredRole: null, otherRoles: [], email: null, claimed: false, isAdmin: false };
+        await storage.updateUser(newPlayer);
+        setUsers([...users, newPlayer]);
+        showSuccessMsg('Giocatore aggiunto!');
+    };
+
+    const handleFullReset = () => {
+        if (!confirm('⚠️ ATTENZIONE: Eliminare TUTTI i dati?')) return;
+        if (!confirm('Conferma: vuoi davvero cancellare tutto?')) return;
+        storage.clearAll();
+        window.location.reload();
+    };
+
+    return (
+        <div className="section-container">
+            <div className="section-header">
+                <h2>🔧 Pannello Amministratore</h2>
+            </div>
+
+            {showSuccess && <div className="success-message">✓ {successMessage}</div>}
+
+            <div className="settings-group">
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                    <h3>👥 Gestione Giocatori ({users.filter(u => !u.id.startsWith('seed')).length})</h3>
+                    <button className="btn btn-primary" onClick={handleAddPlayer}>+ Aggiungi</button>
+                </div>
+                
+                <div className="admin-player-list">
+                    {users.filter(u => !u.id.startsWith('seed')).map((player, index) => {
+                        const voteCount = utils.countVotes(player.id, votes);
+                        const averages = utils.calculateAverages(player.id, votes);
+                        const overall = utils.calculateOverall(averages);
+                        
+                        return (
+                            <div key={player.id} className="admin-player-item">
+                                <span style={{color: '#a0aec0', width: '25px'}}>{index + 1}.</span>
+                                
+                                {editingPlayer === player.id ? (
+                                    <div style={{display: 'flex', gap: '10px', flex: 1}}>
+                                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="admin-input" autoFocus />
+                                        <button onClick={() => handleSaveName(player.id)} className="admin-btn btn-save">✓</button>
+                                        <button onClick={() => setEditingPlayer(null)} className="admin-btn btn-cancel">✕</button>
                                     </div>
                                 ) : (
-                                    <div className="settings-text-value">{user.avatar ? 'Foto caricata' : 'Nessuna foto'}</div>
+                                    <>
+                                        <span style={{fontWeight: '600', minWidth: '140px'}}>{player.name}</span>
+                                        <span style={{color: '#718096', fontSize: '13px', flex: 1}}>{player.claimed ? `✓ ${player.email}` : '○ Non reclamato'}</span>
+                                        <span style={{color: '#667eea', fontSize: '13px'}}>OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)</span>
+                                        <div style={{display: 'flex', gap: '6px'}}>
+                                            <button onClick={() => handleEditName(player)} className="admin-btn">✏️</button>
+                                            <button onClick={() => handleEditVotes(player)} className="admin-btn btn-chart">📊</button>
+                                            <button onClick={() => handleDeletePlayer(player.id)} className="admin-btn btn-delete">🗑️</button>
+                                        </div>
+                                    </>
                                 )}
                             </div>
-                        </div>
-                        <div className="settings-divider"></div>
-                        <div>
-                            <div className="settings-text-muted">Nome</div>
-                            {isEditing ? (<input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} />) : (<div className="settings-text-value">{user.name}</div>)}
-                        </div>
-                        <div className="settings-divider"></div>
-                        <div>
-                            <div className="settings-text-muted">Email</div>
-                            <div className="settings-email">🔒 {user.email}</div>
-                            <div className="settings-email-note">L'email non può essere modificata</div>
+                        );
+                    })}
+                </div>
+            </div>
+            
+            <div className="settings-group">
+                <h3>💾 Backup Database</h3>
+                <p>Esporta o importa tutti i dati (utenti e voti) per fare backup o ripristinare</p>
+                <div style={{display: 'flex', gap: '15px', marginTop: '15px'}}>
+                    <button className="btn btn-primary" onClick={() => {
+                        const data = { users, votes, timestamp: Date.now(), date: new Date().toISOString() };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `calcetto_backup_${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                        showSuccessMsg('Backup esportato!');
+                    }}>📥 Esporta Backup</button>
+                    <button className="btn btn-secondary" onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        input.onchange = async (e) => {
+                            try {
+                                const file = e.target.files[0];
+                                const text = await file.text();
+                                const data = JSON.parse(text);
+                                if (!confirm('⚠️ ATTENZIONE: Questo sovrascriverà tutti i dati attuali. Continuare?')) return;
+                                if (data.users) await storage.setUsers(data.users);
+                                if (data.votes) await storage.setVotes(data.votes);
+                                showSuccessMsg('Backup importato!');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } catch (err) {
+                                alert('Errore durante l\'importazione: ' + err.message);
+                            }
+                        };
+                        input.click();
+                    }}>📤 Importa Backup</button>
+                </div>
+            </div>
+
+            <div className="settings-group admin-danger-zone">
+                <h3>⚠️ Zona Pericolosa</h3>
+                <p>Azioni irreversibili!</p>
+                <button className="btn btn-danger" onClick={handleFullReset}>🗑️ Reset Completo</button>
+            </div>
+
+            {editingVotes && (
+                <div className="modal-overlay">
+                    <div className="modal-content modal-large">
+                        <h2>📊 Modifica: {editingVotes.name}</h2>
+                        <p>Inserisci valori 1-4. Verranno creati 8 voti seed.</p>
+                        {['tecniche', 'tattiche', 'fisiche'].map(category => (
+                            <div key={category} className="vote-edit-category">
+                                <h4 className={`category-${category}`}>{category}</h4>
+                                <div className="vote-edit-grid">
+                                    {SKILLS[category].map(skill => (
+                                        <div key={skill} className="vote-edit-item">
+                                            <label>{skill}</label>
+                                            <input type="number" min="1" max="4" step="0.01" value={voteValues[skill] || ''} onChange={(e) => setVoteValues({...voteValues, [skill]: e.target.value})} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setEditingVotes(null)}>Annulla</button>
+                            <button className="btn btn-primary" onClick={handleSaveVotes}>Salva</button>
                         </div>
                     </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
-                    <div className="settings-group">
-                        <h3>⚽ Ruoli</h3>
-                        {isEditing ? (
-                            <>
-                                <div className="form-group">
-                                    <label>Ruolo preferito *</label>
-                                    <select value={editPreferredRole} onChange={(e) => { setEditPreferredRole(e.target.value); setEditOtherRoles(editOtherRoles.filter(r => r !== e.target.value)); }}>
-                                        <option value="">-- Seleziona --</option>
-                                        {ROLES.map(role => <option key={role} value={role}>{role}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Altri ruoli (min. 2) *</label>
-                                    <div className="checkbox-group">
-                                        {availableOtherRoles.map(role => (
-                                            <div key={role} className="checkbox-item">
-                                                <input type="checkbox" id={`edit-${role}`} checked={editOtherRoles.includes(role)} onChange={() => handleOtherRoleToggle(role)} />
-                                                <label htmlFor={`edit-${role}`}>{role}</label>
+function DebugPage({ users, votes }) {
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [editingVote, setEditingVote] = useState(null);
+    const [editVoteValues, setEditVoteValues] = useState({});
+
+    const getVoteStats = (playerId) => {
+        const playerVotes = votes.filter(v => v.playerId === playerId);
+        const seedVotes = playerVotes.filter(v => v.voterId && v.voterId.startsWith('seed'));
+        const realVotes = playerVotes.filter(v => v.voterId && !v.voterId.startsWith('seed'));
+        return { total: playerVotes.length, seed: seedVotes.length, real: realVotes.length, allVotes: playerVotes };
+    };
+
+    const handleEditVote = (vote) => {
+        setEditingVote(vote);
+        setEditVoteValues(vote.ratings);
+    };
+
+    const handleSaveEditedVote = async () => {
+        if (!editingVote.id) {
+            alert('Impossibile modificare voti senza ID');
+            return;
+        }
+        try {
+            await db.collection('votes').doc(editingVote.id).update({ ratings: editVoteValues });
+            alert('Voto aggiornato! Ricarica la pagina per vedere le modifiche.');
+            setEditingVote(null);
+        } catch (err) {
+            alert('Errore durante il salvataggio: ' + err.message);
+        }
+    };
+
+    const handleDeleteVote = async (voteId) => {
+        if (!voteId) {
+            alert('Impossibile eliminare voti senza ID');
+            return;
+        }
+        if (!confirm('Eliminare questo voto?')) return;
+        try {
+            await db.collection('votes').doc(voteId).delete();
+            alert('Voto eliminato! Ricarica la pagina.');
+        } catch (err) {
+            alert('Errore durante l\'eliminazione: ' + err.message);
+        }
+    };
+
+    const players = users.filter(u => !u.id.startsWith('seed'));
+
+    if (selectedPlayer) {
+        const player = players.find(p => p.id === selectedPlayer);
+        const stats = getVoteStats(player.id);
+        const averages = utils.calculateAverages(player.id, votes);
+        const overall = utils.calculateOverall(averages);
+
+        return (
+            <div className="section-container">
+                <div className="section-header">
+                    <button onClick={() => setSelectedPlayer(null)} className="btn-back">← Indietro</button>
+                    <h2>📊 Dettaglio: {player.name}</h2>
+                </div>
+
+                <div className="debug-stats">
+                    <div className="debug-stat-box"><div className="stat-value seed">{stats.seed}</div><div className="stat-label">Voti Seed</div></div>
+                    <div className="debug-stat-box"><div className="stat-value real">{stats.real}</div><div className="stat-label">Voti Reali</div></div>
+                    <div className="debug-stat-box"><div className="stat-value total">{stats.total}</div><div className="stat-label">Totale</div></div>
+                    <div className="debug-stat-box"><div className="stat-value overall">{overall ? utils.toBase10(overall).toFixed(2) : '-'}</div><div className="stat-label">Overall</div></div>
+                </div>
+
+                <h3>🗳️ Tutti i Voti</h3>
+                <div className="debug-table-wrapper">
+                    <table className="debug-table">
+                        <thead>
+                            <tr>
+                                <th>Votante</th>
+                                <th>Tipo</th>
+                                {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => (<th key={skill}>{skill.substring(0, 6)}</th>))}
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stats.allVotes.map((vote, index) => {
+                                const isSeed = vote.voterId.startsWith('seed');
+                                const voterName = isSeed ? '🤖 Seed' : (users.find(u => u.id === vote.voterId)?.name || 'Sconosciuto');
+                                return (
+                                    <tr key={index} className={index % 2 === 0 ? 'even' : 'odd'}>
+                                        <td>{voterName}</td>
+                                        <td><span className={`vote-type ${isSeed ? 'seed' : 'real'}`}>{isSeed ? 'Seed' : 'Reale'}</span></td>
+                                        {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => (<td key={skill}>{vote.ratings[skill] || '-'}</td>))}
+                                        <td>
+                                            <button onClick={() => handleEditVote(vote)} className="admin-btn" style={{marginRight: '5px'}}>✏️</button>
+                                            <button onClick={() => handleDeleteVote(vote.id)} className="admin-btn btn-delete">🗑️</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            <tr className="average-row">
+                                <td>📊 MEDIA</td>
+                                <td></td>
+                                {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => {
+                                    const skillVotes = stats.allVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
+                                    const avg = skillVotes.length > 0 ? skillVotes.reduce((a, b) => a + b, 0) / skillVotes.length : 0;
+                                    return (<td key={skill}>{avg > 0 ? `${avg.toFixed(2)}` : '-'}</td>);
+                                })}
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                {editingVote && (
+                    <div className="modal-overlay">
+                        <div className="modal-content modal-large">
+                            <h2>✏️ Modifica Voto</h2>
+                            <p>Votante: {editingVote.voterId.startsWith('seed') ? '🤖 Seed' : (users.find(u => u.id === editingVote.voterId)?.name || 'Sconosciuto')}</p>
+                            {['tecniche', 'tattiche', 'fisiche'].map(category => (
+                                <div key={category} className="vote-edit-category">
+                                    <h4 className={`category-${category}`}>{category}</h4>
+                                    <div className="vote-edit-grid">
+                                        {SKILLS[category].map(skill => (
+                                            <div key={skill} className="vote-edit-item">
+                                                <label>{skill}</label>
+                                                <input 
+                                                    type="number" 
+                                                    min="1" 
+                                                    max="4" 
+                                                    step="0.01" 
+                                                    value={editVoteValues[skill] || ''} 
+                                                    onChange={(e) => setEditVoteValues({...editVoteValues, [skill]: parseFloat(e.target.value) || 0})} 
+                                                />
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="role-counter">{editOtherRoles.length}/2 ruoli selezionati {editOtherRoles.length >= 2 && '✓'}</div>
                                 </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="role-item">
-                                    <div className="role-label">Ruolo preferito</div>
-                                    {user.preferredRole ? (<div className="role-value">{user.preferredRole}</div>) : (<span className="empty-value">Non impostato</span>)}
-                                </div>
-                                <div className="role-item">
-                                    <div className="role-label">Mi adatto anche a</div>
-                                    {user.otherRoles && user.otherRoles.length > 0 ? (
-                                        <div className="role-badges">{user.otherRoles.map(role => (<span key={role} className="role-badge">{role}</span>))}</div>
-                                    ) : (<span className="empty-value">Nessuno</span>)}
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {isEditing && (
-                        <div className="settings-actions">
-                            <button onClick={handleCancel} className="btn btn-secondary">✕ Annulla</button>
-                            <button onClick={handleSave} disabled={saving} className="btn btn-primary">{saving ? '⏳ Salvataggio...' : '✓ Salva modifiche'}</button>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        function CSVImportModal({ onClose, onSuccess }) {
-            const [votesFile, setVotesFile] = useState(null);
-            const [error, setError] = useState('');
-            const [importing, setImporting] = useState(false);
-
-            const parseCSV = (text) => {
-                const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
-                const headers = lines[0].split(',').map(h => h.trim());
-                const data = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    const values = line.split(',');
-                    const row = {};
-                    headers.forEach((header, index) => { row[header] = values[index] !== undefined ? values[index].trim() : ''; });
-                    data.push(row);
-                }
-                return { headers, data };
-            };
-
-            const handleImport = async () => {
-                setError('');
-                setImporting(true);
-                try {
-                    if (votesFile) {
-                        const text = await votesFile.text();
-                        const { data } = parseCSV(text);
-                        for (const row of data) {
-                            const vote = {
-                                voterId: row.voterId || `seed_csv_${Date.now()}_${Math.random()}`,
-                                playerId: row.playerId,
-                                ratings: {
-                                    'Tiro': parseInt(row.tiro || row.Tiro) || 0,
-                                    'Passaggio corto': parseInt(row.passaggio_corto || row['Passaggio corto']) || 0,
-                                    'Passaggio lungo': parseInt(row.passaggio_lungo || row['Passaggio lungo']) || 0,
-                                    'Contrasto': parseInt(row.contrasto || row.Contrasto) || 0,
-                                    'Controllo': parseInt(row.controllo || row.Controllo) || 0,
-                                    'Visione di gioco': parseInt(row.visione_di_gioco || row['Visione di gioco']) || 0,
-                                    'Senso della posizione': parseInt(row.senso_della_posizione || row['Senso della posizione']) || 0,
-                                    'Spirito di sacrificio': parseInt(row.spirito_di_sacrificio || row['Spirito di sacrificio']) || 0,
-                                    'Letture difensive': parseInt(row.letture_difensive || row['Letture difensive']) || 0,
-                                    'Costruzione': parseInt(row.costruzione || row.Costruzione) || 0,
-                                    'Resistenza': parseInt(row.resistenza || row.Resistenza) || 0,
-                                    'Scatto': parseInt(row.scatto || row.Scatto) || 0,
-                                    'Progressione': parseInt(row.progressione || row.Progressione) || 0,
-                                    'Presenza fisica': parseInt(row.presenza_fisica || row['Presenza fisica']) || 0,
-                                    'Cazzimma': parseInt(row.cazzimma || row.Cazzimma) || 0
-                                },
-                                timestamp: Date.now()
-                            };
-                            await storage.addVote(vote);
-                        }
-                        onSuccess();
-                    }
-                } catch (e) {
-                    console.error(e);
-                    setError('Errore nel parsing del file: ' + e.message);
-                }
-                setImporting(false);
-            };
-
-            return (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2>📁 Importa CSV</h2>
-                        <p>Carica un file CSV con le valutazioni</p>
-                        <div className="form-group">
-                            <label>File Valutazioni (CSV)</label>
-                            <input type="file" accept=".csv" onChange={(e) => setVotesFile(e.target.files[0])} />
-                        </div>
-                        {error && <div className="error-message">{error}</div>}
-                        <div className="modal-actions">
-                            <button className="btn btn-secondary" onClick={onClose}>Annulla</button>
-                            <button className="btn btn-primary" onClick={handleImport} disabled={!votesFile || importing}>{importing ? 'Importazione...' : 'Importa'}</button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function AdminPage({ users, setUsers, votes, setVotes }) {
-            const [editingPlayer, setEditingPlayer] = useState(null);
-            const [editName, setEditName] = useState('');
-            const [showSuccess, setShowSuccess] = useState(false);
-            const [successMessage, setSuccessMessage] = useState('');
-            const [editingVotes, setEditingVotes] = useState(null);
-            const [voteValues, setVoteValues] = useState({});
-            const [showImport, setShowImport] = useState(false);
-
-            const showSuccessMsg = (msg) => {
-                setSuccessMessage(msg);
-                setShowSuccess(true);
-                setTimeout(() => setShowSuccess(false), 3000);
-            };
-
-            const handleSaveName = async (playerId) => {
-                if (!editName.trim()) return;
-                const updatedUser = users.find(u => u.id === playerId);
-                updatedUser.name = editName.trim();
-                await storage.updateUser(updatedUser);
-                const updatedUsers = users.map(u => u.id === playerId ? updatedUser : u);
-                setUsers(updatedUsers);
-                setEditingPlayer(null);
-                showSuccessMsg('Nome aggiornato!');
-            };
-
-            const handleDeletePlayer = async (playerId) => {
-                if (!confirm('Eliminare questo giocatore e tutte le sue valutazioni?')) return;
-                const updatedUsers = users.filter(u => u.id !== playerId);
-                setUsers(updatedUsers);
-                await storage.setUsers(updatedUsers);
-                showSuccessMsg('Giocatore eliminato!');
-            };
-
-            const handleEditVotes = (player) => {
-                const averages = utils.calculateAverages(player.id, votes);
-                const values = {};
-                if (averages) {
-                    Object.keys(averages).forEach(k => { values[k] = averages[k].toFixed(2); });
-                } else {
-                    [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => { values[skill] = ''; });
-                }
-                setVoteValues(values);
-                setEditingVotes(player);
-            };
-
-            const handleSaveVotes = async () => {
-                const snapshot = await db.collection('votes').where('playerId', '==', editingVotes.id).get();
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => {
-                    if (doc.data().voterId && doc.data().voterId.startsWith('seed')) {
-                        batch.delete(doc.ref);
-                    }
-                });
-                await batch.commit();
-
-                for (let i = 0; i < 8; i++) {
-                    const seedVote = { voterId: `seed_admin_${i}_${Date.now()}`, playerId: editingVotes.id, ratings: {}, timestamp: Date.now() };
-                    [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].forEach(skill => {
-                        const value = parseFloat(voteValues[skill]);
-                        if (!isNaN(value)) seedVote.ratings[skill] = value;
-                    });
-                    await storage.addVote(seedVote);
-                }
-
-                setEditingVotes(null);
-                showSuccessMsg('Valutazioni aggiornate!');
-                setTimeout(() => window.location.reload(), 1000);
-            };
-
-            const handleAddPlayer = async () => {
-                const newName = prompt('Nome del nuovo giocatore:');
-                if (!newName || !newName.trim()) return;
-                const newPlayer = { id: `player${users.length + 1}`, name: newName.trim(), avatar: null, preferredRole: null, otherRoles: [], email: null, claimed: false, isAdmin: false, isInitialPlayer: false, hasVotedOffline: false };
-                await storage.updateUser(newPlayer);
-                setUsers([...users, newPlayer]);
-                showSuccessMsg('Giocatore aggiunto!');
-            };
-
-            const handleFullReset = () => {
-                if (!confirm('⚠️ ATTENZIONE: Eliminare TUTTI i dati?')) return;
-                if (!confirm('Conferma: vuoi davvero cancellare tutto?')) return;
-                storage.clearAll();
-                window.location.reload();
-            };
-
-            return (
-                <div className="admin-section">
-                    <h2>🔧 Pannello Amministratore</h2>
-                    {showSuccess && <div className="success-message">✓ {successMessage}</div>}
-
-                    <div className="settings-group">
-                        <div className="admin-header">
-                            <h3>👥 Gestione Giocatori ({users.filter(u => !u.id.startsWith('seed')).length})</h3>
-                            <button className="btn btn-primary" onClick={handleAddPlayer}>+ Aggiungi</button>
-                        </div>
-                        <div className="admin-player-list">
-                            {users.filter(u => !u.id.startsWith('seed')).map((player, index) => {
-                                const voteCount = utils.countVotes(player.id, votes);
-                                const averages = utils.calculateAverages(player.id, votes);
-                                const overall = utils.calculateOverall(averages);
-                                return (
-                                    <div key={player.id} className="admin-player-item">
-                                        <span className="player-index">{index + 1}.</span>
-                                        {editingPlayer === player.id ? (
-                                            <>
-                                                <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
-                                                <button onClick={() => handleSaveName(player.id)} className="admin-btn btn-save">✓</button>
-                                                <button onClick={() => setEditingPlayer(null)} className="admin-btn btn-cancel">✕</button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="player-name">{player.name}</span>
-                                                <span className="player-status">{player.claimed ? `✓ ${player.email}` : '◯ Non reclamato'}</span>
-                                                <span className="player-stats">OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)</span>
-                                                <div className="admin-actions">
-                                                    <button onClick={() => { setEditingPlayer(player.id); setEditName(player.name); }} className="admin-btn">✏️</button>
-                                                    <button onClick={() => handleEditVotes(player)} className="admin-btn btn-chart">📊</button>
-                                                    <button onClick={() => handleDeletePlayer(player.id)} className="admin-btn btn-delete">🗑️</button>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="settings-group">
-                        <h3>💾 Backup Database</h3>
-                        <p>Esporta o importa tutti i dati (utenti e voti) per fare backup o ripristinare</p>
-                        <div style={{display: 'flex', gap: '15px', marginTop: '15px'}}>
-                            <button className="btn btn-primary" onClick={() => {
-                                const data = { users, votes, timestamp: Date.now(), date: new Date().toISOString() };
-                                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `calcetto_backup_${new Date().toISOString().split('T')[0]}.json`;
-                                a.click();
-                                showSuccessMsg('Backup esportato!');
-                            }}>📥 Esporta Backup</button>
-                            <button className="btn btn-secondary" onClick={() => {
-                                const input = document.createElement('input');
-                                input.type = 'file';
-                                input.accept = '.json';
-                                input.onchange = async (e) => {
-                                    try {
-                                        const file = e.target.files[0];
-                                        const text = await file.text();
-                                        const data = JSON.parse(text);
-                                        if (!confirm('⚠️ ATTENZIONE: Questo sovrascriverà tutti i dati attuali. Continuare?')) return;
-                                        if (data.users) await storage.setUsers(data.users);
-                                        if (data.votes) await storage.setVotes(data.votes);
-                                        showSuccessMsg('Backup importato!');
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    } catch (err) {
-                                        alert('Errore durante l\'importazione: ' + err.message);
-                                    }
-                                };
-                                input.click();
-                            }}>📤 Importa Backup</button>
-                        </div>
-                    </div>
-
-                    {showImport && (<CSVImportModal onClose={() => setShowImport(false)} onSuccess={() => { setShowImport(false); showSuccessMsg('Dati importati!'); setTimeout(() => window.location.reload(), 1000); }} />)}
-
-                    <div className="settings-group admin-danger-zone">
-                        <h3>⚠️ Zona Pericolosa</h3>
-                        <p>Azioni irreversibili!</p>
-                        <button className="btn btn-danger" onClick={handleFullReset}>🗑️ Reset Completo</button>
-                    </div>
-
-                    {editingVotes && (
-                        <div className="modal-overlay">
-                            <div className="modal-content modal-large">
-                                <h2>📊 Modifica: {editingVotes.name}</h2>
-                                <p>Inserisci valori 1-4. Verranno creati 8 voti seed.</p>
-                                {['tecniche', 'tattiche', 'fisiche'].map(category => (
-                                    <div key={category} className="vote-edit-category">
-                                        <h4 className={`category-${category}`}>{category}</h4>
-                                        <div className="vote-edit-grid">
-                                            {SKILLS[category].map(skill => (
-                                                <div key={skill} className="vote-edit-item">
-                                                    <label>{skill}</label>
-                                                    <input type="number" min="1" max="4" step="0.01" value={voteValues[skill] || ''} onChange={(e) => setVoteValues({...voteValues, [skill]: e.target.value})} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                                <div className="modal-actions">
-                                    <button className="btn btn-secondary" onClick={() => setEditingVotes(null)}>Annulla</button>
-                                    <button className="btn btn-primary" onClick={handleSaveVotes}>Salva</button>
-                                </div>
+                            ))}
+                            <div className="modal-actions">
+                                <button className="btn btn-secondary" onClick={() => setEditingVote(null)}>Annulla</button>
+                                <button className="btn btn-primary" onClick={handleSaveEditedVote}>Salva</button>
                             </div>
                         </div>
-                    )}
-                </div>
-            );
-        }
+                    </div>
+                )}
+            </div>
+        );
+    }
 
-        function DebugPage({ users, votes }) {
-            const [selectedPlayer, setSelectedPlayer] = useState(null);
-            const [editingVote, setEditingVote] = useState(null);
-            const [editVoteValues, setEditVoteValues] = useState({});
+    return (
+        <div className="section-container">
+            <div className="section-header">
+                <h2>🐛 Debug - Riepilogo Voti</h2>
+            </div>
 
-            const getVoteStats = (playerId) => {
-                const playerVotes = votes.filter(v => v.playerId === playerId);
-                const seedVotes = playerVotes.filter(v => v.voterId && v.voterId.startsWith('seed'));
-                const realVotes = playerVotes.filter(v => v.voterId && !v.voterId.startsWith('seed'));
-                return { total: playerVotes.length, seed: seedVotes.length, real: realVotes.length, allVotes: playerVotes };
-            };
+            <div className="debug-global-stats">
+                <div className="debug-stat-box"><div className="stat-value seed">{votes.filter(v => v.voterId && v.voterId.startsWith('seed')).length}</div><div className="stat-label">Voti Seed Totali</div></div>
+                <div className="debug-stat-box"><div className="stat-value real">{votes.filter(v => v.voterId && !v.voterId.startsWith('seed')).length}</div><div className="stat-label">Voti Reali Totali</div></div>
+                <div className="debug-stat-box"><div className="stat-value total">{votes.length}</div><div className="stat-label">Voti Totali</div></div>
+            </div>
 
-            const handleEditVote = (vote) => {
-                setEditingVote(vote);
-                setEditVoteValues(vote.ratings);
-            };
-
-            const handleSaveEditedVote = async () => {
-                if (!editingVote.id) {
-                    alert('Impossibile modificare voti senza ID');
-                    return;
-                }
-                try {
-                    await db.collection('votes').doc(editingVote.id).update({ ratings: editVoteValues });
-                    alert('Voto aggiornato! Ricarica la pagina per vedere le modifiche.');
-                    setEditingVote(null);
-                } catch (err) {
-                    alert('Errore durante il salvataggio: ' + err.message);
-                }
-            };
-
-            const handleDeleteVote = async (voteId) => {
-                if (!voteId) {
-                    alert('Impossibile eliminare voti senza ID');
-                    return;
-                }
-                if (!confirm('Eliminare questo voto?')) return;
-                try {
-                    await db.collection('votes').doc(voteId).delete();
-                    alert('Voto eliminato! Ricarica la pagina.');
-                } catch (err) {
-                    alert('Errore durante l\'eliminazione: ' + err.message);
-                }
-            };
-
-            const players = users.filter(u => !u.id.startsWith('seed'));
-
-            if (selectedPlayer) {
-                const player = players.find(p => p.id === selectedPlayer);
-                const stats = getVoteStats(player.id);
-                const averages = utils.calculateAverages(player.id, votes);
-                const overall = utils.calculateOverall(averages);
-
-                return (
-                    <div className="debug-detail">
-                        <div className="debug-header">
-                            <h2>📊 Dettaglio: {player.name}</h2>
-                            <button onClick={() => setSelectedPlayer(null)} className="btn btn-secondary">← Indietro</button>
-                        </div>
-
-                        <div className="debug-stats">
-                            <div className="debug-stat-box"><div className="stat-value seed">{stats.seed}</div><div className="stat-label">Voti Seed</div></div>
-                            <div className="debug-stat-box"><div className="stat-value real">{stats.real}</div><div className="stat-label">Voti Reali</div></div>
-                            <div className="debug-stat-box"><div className="stat-value total">{stats.total}</div><div className="stat-label">Totale</div></div>
-                            <div className="debug-stat-box"><div className="stat-value overall">{overall ? utils.toBase10(overall).toFixed(2) : '-'}</div><div className="stat-label">Overall</div></div>
-                        </div>
-
-                        <h3>🗳️ Tutti i Voti</h3>
-                        <div className="debug-table-wrapper">
-                            <table className="debug-table">
-                                <thead>
-                                    <tr>
-                                        <th>Votante</th>
-                                        <th>Tipo</th>
-                                        {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => (<th key={skill}>{skill.substring(0, 6)}</th>))}
-                                        <th>Azioni</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {stats.allVotes.map((vote, index) => {
-                                        const isSeed = vote.voterId.startsWith('seed');
-                                        const voterName = isSeed ? '🤖 Seed' : (users.find(u => u.id === vote.voterId)?.name || 'Sconosciuto');
-                                        return (
-                                            <tr key={index} className={index % 2 === 0 ? 'even' : 'odd'}>
-                                                <td>{voterName}</td>
-                                                <td><span className={`vote-type ${isSeed ? 'seed' : 'real'}`}>{isSeed ? 'Seed' : 'Reale'}</span></td>
-                                                {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => (<td key={skill}>{vote.ratings[skill] || '-'}</td>))}
-                                                <td>
-                                                    <button onClick={() => handleEditVote(vote)} className="admin-btn" style={{marginRight: '5px'}}>✏️</button>
-                                                    <button onClick={() => handleDeleteVote(vote.id)} className="admin-btn btn-delete">🗑️</button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                    <tr className="average-row">
-                                        <td>📊 MEDIA</td>
-                                        <td></td>
-                                        {[...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche].map(skill => {
-                                            const skillVotes = stats.allVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
-                                            const avg = skillVotes.length > 0 ? skillVotes.reduce((a, b) => a + b, 0) / skillVotes.length : 0;
-                                            return (<td key={skill}>{avg > 0 ? `${avg.toFixed(2)}` : '-'}</td>);
-                                        })}
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {editingVote && (
-                            <div className="modal-overlay">
-                                <div className="modal-content modal-large">
-                                    <h2>✏️ Modifica Voto</h2>
-                                    <p>Votante: {editingVote.voterId.startsWith('seed') ? '🤖 Seed' : (users.find(u => u.id === editingVote.voterId)?.name || 'Sconosciuto')}</p>
-                                    {['tecniche', 'tattiche', 'fisiche'].map(category => (
-                                        <div key={category} className="vote-edit-category">
-                                            <h4 className={`category-${category}`}>{category}</h4>
-                                            <div className="vote-edit-grid">
-                                                {SKILLS[category].map(skill => (
-                                                    <div key={skill} className="vote-edit-item">
-                                                        <label>{skill}</label>
-                                                        <input 
-                                                            type="number" 
-                                                            min="1" 
-                                                            max="4" 
-                                                            step="0.01" 
-                                                            value={editVoteValues[skill] || ''} 
-                                                            onChange={(e) => setEditVoteValues({...editVoteValues, [skill]: parseFloat(e.target.value) || 0})} 
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className="modal-actions">
-                                        <button className="btn btn-secondary" onClick={() => setEditingVote(null)}>Annulla</button>
-                                        <button className="btn btn-primary" onClick={handleSaveEditedVote}>Salva</button>
-                                    </div>
-                                </div>
+            <div className="settings-group">
+                <h3>👥 Dettaglio per Giocatore</h3>
+                <div className="debug-player-list">
+                    {players.map(player => {
+                        const stats = getVoteStats(player.id);
+                        const averages = utils.calculateAverages(player.id, votes);
+                        const overall = utils.calculateOverall(averages);
+                        return (
+                            <div key={player.id} className="debug-player-item" onClick={() => setSelectedPlayer(player.id)}>
+                                <span style={{fontWeight: '600', minWidth: '150px'}}>{player.name}</span>
+                                <span className="debug-badge seed">Seed: {stats.seed}</span>
+                                <span className="debug-badge real">Reali: {stats.real}</span>
+                                <span className="debug-badge total">Tot: {stats.total}</span>
+                                <span style={{color: '#667eea', fontSize: '14px'}}>OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'}</span>
                             </div>
-                        )}
-                    </div>
-                );
-            }
-
-            return (
-                <div className="debug-section">
-                    <h2>🐛 Debug - Riepilogo Voti</h2>
-
-                    <div className="debug-global-stats">
-                        <div className="debug-stat-box"><div className="stat-value seed">{votes.filter(v => v.voterId && v.voterId.startsWith('seed')).length}</div><div className="stat-label">Voti Seed Totali</div></div>
-                        <div className="debug-stat-box"><div className="stat-value real">{votes.filter(v => v.voterId && !v.voterId.startsWith('seed')).length}</div><div className="stat-label">Voti Reali Totali</div></div>
-                        <div className="debug-stat-box"><div className="stat-value total">{votes.length}</div><div className="stat-label">Voti Totali</div></div>
-                    </div>
-
-                    <div className="settings-group">
-                        <h3>👥 Dettaglio per Giocatore</h3>
-                        <div className="debug-player-list">
-                            {players.map(player => {
-                                const stats = getVoteStats(player.id);
-                                const averages = utils.calculateAverages(player.id, votes);
-                                const overall = utils.calculateOverall(averages);
-                                return (
-                                    <div key={player.id} className="debug-player-item">
-                                        <div className="player-name">{player.name}</div>
-                                        <div className="vote-stats">
-                                            <span className="seed">Seed: {stats.seed}</span>
-                                            <span className="real">Reali: {stats.real}</span>
-                                            <span className="total">Tot: {stats.total}</span>
-                                            <span className="overall">OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'}</span>
-                                        </div>
-                                        <button onClick={() => setSelectedPlayer(player.id)} className="btn btn-primary btn-small">🔍 Dettagli</button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="debug-note">
-                        <h3>⚠️ Note</h3>
-                        <ul>
-                            <li><strong>Voti Seed:</strong> Voti inseriti dall'Admin (dovrebbero essere 8 per giocatore)</li>
-                            <li><strong>Voti Reali:</strong> Voti dati da altri utenti dell'app</li>
-                            <li><strong>Overall:</strong> Media di tutte le skill (scala 1-10)</li>
-                            <li>Clicca su "🔍 Dettagli" per vedere tutti i voti e i calcoli delle medie</li>
-                        </ul>
-                    </div>
+                        );
+                    })}
                 </div>
-            );
-        }
-
+            </div>
+        </div>
+    );
+}
         function App() {
             const getPendingEmail = () => sessionStorage.getItem('pendingEmail');
             const setPendingEmailStorage = (email) => { if (email) { sessionStorage.setItem('pendingEmail', email); } else { sessionStorage.removeItem('pendingEmail'); } };
