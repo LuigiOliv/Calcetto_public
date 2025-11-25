@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calcetto Rating App v3</title>
+    <title>Calcetto Rating App - Versione Lancio 1.0</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -583,7 +583,81 @@ function ClassifichePage({ users, votes, onViewProfile }) {
     );
 }
 
-function SettingsPage({ user, onAvatarUpdate }) {
+function RoleEditModal({ user, onClose, onSuccess }) {
+    const [preferredRole, setPreferredRole] = useState(user.preferredRole || '');
+    const [otherRoles, setOtherRoles] = useState(user.otherRoles || []);
+
+    const handleOtherRoleToggle = (role) => {
+        if (otherRoles.includes(role)) {
+            setOtherRoles(otherRoles.filter(r => r !== role));
+        } else {
+            setOtherRoles([...otherRoles, role]);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!preferredRole) {
+            alert('Seleziona il tuo ruolo preferito');
+            return;
+        }
+        if (otherRoles.length < 2) {
+            alert('Seleziona almeno 2 altri ruoli');
+            return;
+        }
+
+        const updatedUser = { ...user, preferredRole, otherRoles };
+        await storage.updateUser(updatedUser);
+        onSuccess(updatedUser);
+    };
+
+    const availableOtherRoles = ROLES.filter(r => r !== preferredRole);
+
+    return (
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <h2>✏️ Modifica Ruoli</h2>
+                <p>Aggiorna i tuoi ruoli preferiti</p>
+                <div className="form-group">
+                    <label>Qual è il tuo ruolo preferito? *</label>
+                    <select value={preferredRole} onChange={(e) => setPreferredRole(e.target.value)}>
+                        <option value="">-- Seleziona --</option>
+                        {ROLES.map(role => (<option key={role} value={role}>{role}</option>))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>In quali altri ruoli ti adatti? (min. 2) *</label>
+                    <div className="checkbox-group">
+                        {availableOtherRoles.map(role => (
+                            <div key={role} className="checkbox-item">
+                                <input 
+                                    type="checkbox" 
+                                    id={`edit-role-${role}`} 
+                                    checked={otherRoles.includes(role)} 
+                                    onChange={() => handleOtherRoleToggle(role)} 
+                                />
+                                <label htmlFor={`edit-role-${role}`}>{role}</label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="modal-actions">
+                    <button className="btn btn-secondary" onClick={onClose}>
+                        Annulla
+                    </button>
+                    <button 
+                        className={`btn btn-primary ${(!preferredRole || otherRoles.length < 2) ? 'btn-disabled' : ''}`} 
+                        onClick={handleSubmit} 
+                        disabled={!preferredRole || otherRoles.length < 2}
+                    >
+                        Conferma {otherRoles.length < 2 && preferredRole ? `(${otherRoles.length}/2 ruoli)` : ''}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function SettingsPage({ user, onUpdateUser }) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showRoleEdit, setShowRoleEdit] = useState(false);
 
@@ -591,8 +665,9 @@ function SettingsPage({ user, onAvatarUpdate }) {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                onAvatarUpdate(reader.result);
+            reader.onloadend = async () => {
+                const updatedUser = { ...user, avatar: reader.result };
+                await onUpdateUser(updatedUser);
                 setShowSuccess(true);
                 setTimeout(() => setShowSuccess(false), 3000);
             };
@@ -607,50 +682,51 @@ function SettingsPage({ user, onAvatarUpdate }) {
             </div>
             
             <div className="settings-group">
-                <h3>Foto Profilo</h3>
-                <div style={{display: 'flex', alignItems: 'center', gap: '30px', flexWrap: 'wrap'}}>
-                    <div className="avatar" style={{width: '100px', height: '100px', fontSize: '40px'}}>
+                <h3>👤 Profilo</h3>
+                <div className="settings-profile-layout">
+                    <div className="avatar settings-profile-avatar">
                         {user.avatar ? <img src={user.avatar} alt={user.name} /> : utils.getInitials(user.name)}
                     </div>
-                    <div className="file-input-wrapper">
-                        <input type="file" id="avatar-upload" accept="image/*" onChange={handleFileChange} />
-                        <label htmlFor="avatar-upload" className="file-input-label">📷 Carica Foto</label>
-                    </div>
-                </div>
-            </div>
-
-            <div className="settings-group">
-                <h3>Informazioni Account</h3>
-<div className="settings-info-box">
-                    <div style={{marginBottom: '15px'}}><strong>Nome:</strong> {user.name}</div>
-                    <div><strong>Email:</strong> {user.email}</div>
-                </div>
-            </div>
-
-            <div className="settings-group">
-                <h3>Ruoli</h3>
-<div className="settings-info-box">
-                    <div style={{marginBottom: '15px'}}>
-                        <strong>Ruolo preferito:</strong> {user.preferredRole || 'Non impostato'}
-                    </div>
-                    <div style={{marginBottom: '15px'}}>
-                        <strong>Altri ruoli:</strong>
-                        <div style={{marginTop: '8px'}}>
-                            {user.otherRoles && user.otherRoles.length > 0 ? (
-                                <div className="role-badges">
-                                    {user.otherRoles.map(role => (
-                                        <span key={role} className="role-badge">{role}</span>
-                                    ))}
-                                </div>
-                            ) : (
-                                <span style={{color: '#718096'}}>Nessuno</span>
-                            )}
+                    <div className="settings-profile-info">
+                        <div className="settings-field">
+                            <div className="settings-field-label">Nome</div>
+                            <div className="settings-field-value">{user.name}</div>
+                        </div>
+                        <div className="settings-field">
+                            <div className="settings-field-label">Email</div>
+                            <div className="settings-field-email">{user.email}</div>
+                        </div>
+                        <div className="file-input-wrapper">
+                            <input type="file" id="avatar-upload" accept="image/*" onChange={handleFileChange} />
+                            <label htmlFor="avatar-upload" className="file-input-label">📷 Modifica Foto</label>
                         </div>
                     </div>
-                    <button className="btn btn-secondary" onClick={() => setShowRoleEdit(true)} style={{marginTop: '10px'}}>
-                        ✏️ Modifica Ruoli
-                    </button>
                 </div>
+            </div>
+
+            <div className="settings-group">
+                <h3>⚽ Ruoli</h3>
+                <div className="settings-field">
+                    <div className="settings-field-label">Ruolo Preferito</div>
+                    <div className="settings-role-display">
+                        {user.preferredRole || 'Non impostato'}
+                    </div>
+                </div>
+                <div className="settings-field">
+                    <div className="settings-field-label">Altri Ruoli</div>
+                    {user.otherRoles && user.otherRoles.length > 0 ? (
+                        <div className="settings-role-badges">
+                            {user.otherRoles.map(role => (
+                                <span key={role} className="role-badge">{role}</span>
+                            ))}
+                        </div>
+                    ) : (
+                        <span className="settings-empty-value">Nessuno</span>
+                    )}
+                </div>
+                <button className="btn btn-secondary" onClick={() => setShowRoleEdit(true)}>
+                    ✏️ Modifica Ruoli
+                </button>
             </div>
 
             {showSuccess && <div className="success-message">✓ Impostazioni aggiornate!</div>}
@@ -659,7 +735,12 @@ function SettingsPage({ user, onAvatarUpdate }) {
                 <RoleEditModal 
                     user={user}
                     onClose={() => setShowRoleEdit(false)}
-                    onSuccess={() => { setShowRoleEdit(false); setShowSuccess(true); setTimeout(() => setShowSuccess(false), 3000); }}
+                    onSuccess={async (updatedUser) => { 
+                        await onUpdateUser(updatedUser);
+                        setShowRoleEdit(false); 
+                        setShowSuccess(true); 
+                        setTimeout(() => setShowSuccess(false), 3000); 
+                    }}
                 />
             )}
         </div>
