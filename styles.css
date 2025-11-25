@@ -485,8 +485,8 @@ p {
     display: flex;
     align-items: flex-start;  /* 👈 Allinea tutto in alto */
     gap: 40px;
-    margin-bottom: 30px;
-    padding: 20px 0;
+    margin-bottom: 0px;
+    padding: 20px 0 0 0;
 }
 
 .profile-header .avatar {
