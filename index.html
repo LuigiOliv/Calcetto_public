@@ -426,6 +426,13 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
     const hasEnoughVotes = voteCount >= 5;
     const averages = utils.calculateAverages(player.id, votes);
     const overall = utils.calculateOverall(averages);
+    const [flippedCard, setFlippedCard] = useState(null);
+
+    const handleCardClick = (category) => {
+        if (window.innerWidth <= 768) {
+            setFlippedCard(flippedCard === category ? null : category);
+        }
+    };
 
     return (
         <div className="profile-container">
@@ -472,29 +479,43 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
                         {Object.entries(SKILLS).map(([category, skills]) => {
                             const catOverall = utils.calculateCategoryOverall(averages, category);
                             return (
-                                <div key={category} className="chart-box">
-                                    <h3 className={`category-${category}`}>{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
-                                    {catOverall && (<div className="category-overall">{utils.toBase10(catOverall).toFixed(2)}</div>)}
-                                    <RadarChart data={averages} labels={skills} category={category} />
+                                <div 
+                                    key={category} 
+                                    className={`chart-box ${flippedCard === category ? 'flipped' : ''}`}
+                                    onClick={() => handleCardClick(category)}
+                                >
+                                    <div className="chart-box-inner">
+                                        <div className="chart-box-front">
+                                            <h3 className={`category-${category}`}>
+                                                {category.charAt(0).toUpperCase() + category.slice(1)}
+                                            </h3>
+                                            {catOverall && (
+                                                <div className="category-overall">
+                                                    {utils.toBase10(catOverall).toFixed(2)}
+                                                </div>
+                                            )}
+                                            <RadarChart data={averages} labels={skills} category={category} />
+                                        </div>
+                                        
+                                        <div className="chart-box-back">
+                                            <h4 className={`category-${category}`}>
+                                                {category.charAt(0).toUpperCase() + category.slice(1)}
+                                            </h4>
+                                            <div className="chart-detail-list">
+                                                {skills.map(skill => (
+                                                    <div key={skill} className="chart-detail-item">
+                                                        <span>{skill}</span>
+                                                        <span className={`category-${category}`}>
+                                                            {averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             );
                         })}
-                    </div>
-                    <div className="detail-section">
-                        <h3>📋 Dettaglio Valutazioni</h3>
-                        <div className="detail-grid">
-                            {Object.entries(SKILLS).map(([category, skills]) => (
-                                <div key={category} className="skill-detail-box">
-                                    <h4 className={`category-${category}`}>{category}</h4>
-                                    {skills.map(skill => (
-                                        <div key={skill} className="skill-detail-item">
-                                            <span>{skill}</span>
-                                            <span className={`skill-value category-${category}`}>{averages[skill] ? utils.toBase10(averages[skill]).toFixed(2) : '-'}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </>
             ) : (
