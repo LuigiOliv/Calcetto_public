@@ -829,19 +829,36 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
 
 .settings-group {
     background: var(--bg-card);
-    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 4px;
-    border: 1px solid rgba(210, 248, 0, 0.2);
+    padding: 30px;
     margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .settings-group h3 {
     color: var(--volt);
     margin-bottom: 20px;
+    font-family: 'Teko', sans-serif;
     font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
+.settings-group p {
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+.settings-info-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.settings-info-box strong {
+    color: var(--volt);
+}
 .file-input-wrapper {
     position: relative;
 }
@@ -1896,6 +1913,9 @@ canvas.chart-canvas {
     gap: 10px;
 }
 
+.debug-player-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
 .debug-player-item {
     background: var(--bg-card);
     padding: 15px 20px;
@@ -1904,6 +1924,8 @@ canvas.chart-canvas {
     align-items: center;
     justify-content: space-between;
     border: 1px solid rgba(255, 255, 255, 0.05);
+       cursor: pointer;  /* 👈 AGGIUNGI QUESTA */
+       transition: background 0.2s;
 }
 
 .debug-player-item .player-name {
