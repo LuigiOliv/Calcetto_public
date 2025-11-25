@@ -249,8 +249,8 @@
             return (
                 <div className="header">
                     <div className="header-left">
-                        <h1>⚽ Calcetto Rating</h1>
-                        <p>Sistema di valutazione giocatori</p>
+                        <h1>⚽ Calcetto del <span style={{color: 'var(--volt)'}}>giovedì</span></h1>
+                        <p>Dedicata a quelli che il week-end inizia con la partitella</p>
                     </div>
                     <div className="user-info">
                         <div className="avatar">
@@ -443,7 +443,7 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
                 
                 <div className="profile-header-info">
                     <h2>{player.name}</h2>
-                    <div className="votes-count">{voteCount} match data points</div>
+                    <div className="votes-count">Sulla base di {voteCount} valutazioni ricevute</div>
                 </div>
                 
                 {(player.preferredRole || (player.otherRoles && player.otherRoles.length > 0)) && (
