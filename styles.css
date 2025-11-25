@@ -868,19 +868,27 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
    ============================================================================ */
 .settings-group {
     background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(210, 248, 0, 0.15);
     border-radius: 4px;
-    padding: 30px;
+    padding: 35px;
     margin-bottom: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.settings-group:hover {
+    border-color: rgba(210, 248, 0, 0.3);
+    box-shadow: 0 4px 25px rgba(210, 248, 0, 0.15);
 }
 
 .settings-group h3 {
     color: var(--volt);
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     font-family: 'Teko', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     text-transform: uppercase;
     letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(210, 248, 0, 0.3);
 }
 
 .settings-group p {
@@ -901,6 +909,7 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     width: 100px;
     height: 100px;
     font-size: 40px;
+    border: 3px solid var(--volt);
 }
 
 .settings-profile-info {
@@ -909,39 +918,48 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
 }
 
 .settings-field {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .settings-field-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #8892a6;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 8px;
+    letter-spacing: 1.8px;
+    margin-bottom: 10px;
     font-weight: 400;
+    display: block;
 }
 
 .settings-field-value {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: white;
+    font-family: 'Teko', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .settings-field-email {
     font-size: 1rem;
     color: #94A3B8;
+    font-weight: 400;
 }
 
 /* Settings Role Display */
 .settings-role-display {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: white;
-    padding: 8px 16px;
+    padding: 10px 20px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
-    border-left: 3px solid var(--volt);
+    border-left: 4px solid var(--volt);
     display: inline-block;
+    font-family: 'Teko', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px rgba(210, 248, 0, 0.1);
 }
 
 .settings-role-badges {
@@ -950,16 +968,31 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     gap: 8px;
 }
 
+/* Badge più piccoli per settings */
+.settings-role-badges .role-badge {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+    font-weight: 500;
+}
+
 .settings-empty-value {
     color: #718096;
     font-size: 0.9rem;
+    font-style: italic;
 }
 
 .file-input-wrapper {
     position: relative;
+    display: inline-block;
 }
+
 .file-input-wrapper input[type="file"] {
-    display: none;
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
 }
 
 .file-input-label {
@@ -968,16 +1001,18 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     background: var(--volt);
     color: black;
     font-family: 'Teko', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     text-transform: uppercase;
     cursor: pointer;
     border-radius: 4px;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
 .file-input-label:hover {
     background: white;
-    box-shadow: 0 0 15px white;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
     transform: translateY(-2px);
 }
 
@@ -1248,6 +1283,24 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     
     h2 {
         font-size: 1.5rem;
+    }
+    
+    .settings-profile-layout {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .settings-profile-info {
+        width: 100%;
+    }
+    
+    .settings-role-badges {
+        justify-content: center;
+    }
+    
+    .settings-group {
+        padding: 25px 20px;
     }
 }
 
