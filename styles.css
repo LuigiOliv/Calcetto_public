@@ -863,6 +863,32 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
 .leaderboard-item.rank-3:hover {
     box-shadow: 0 0 25px rgba(205, 127, 50, 0.4);
 
+/* ============================================================================
+   SETTINGS / IMPOSTAZIONI
+   ============================================================================ */
+.settings-group {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.settings-group h3 {
+    color: var(--volt);
+    margin-bottom: 20px;
+    font-family: 'Teko', sans-serif;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.settings-group p {
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
 /* Settings Profile Layout */
 .settings-profile {
     display: flex;
@@ -968,9 +994,9 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     font-size: 0.9rem;
     font-style: italic;
 }
+
 .file-input-wrapper {
     position: relative;
-    display: inline-block;
 }
 .file-input-wrapper input[type="file"] {
     display: none;
@@ -982,18 +1008,16 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     background: var(--volt);
     color: black;
     font-family: 'Teko', sans-serif;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     cursor: pointer;
     border-radius: 4px;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    letter-spacing: 1px;
+    transition: all 0.2s ease;
 }
 
 .file-input-label:hover {
     background: white;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px white;
     transform: translateY(-2px);
 }
 
@@ -1264,24 +1288,6 @@ text-shadow: 0 0 20px rgba(210, 248, 0, 0.3);
     
     h2 {
         font-size: 1.5rem;
-    }
-    
-    .settings-profile-layout {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .settings-profile-info {
-        width: 100%;
-    }
-    
-    .settings-role-badges {
-        justify-content: center;
-    }
-    
-    .settings-group {
-        padding: 25px 20px;
     }
 }
 
@@ -1660,33 +1666,6 @@ canvas.chart-canvas {
 .overall-score {
     font-weight: 800;
     font-size: 28px;
-}
-
-.avatar-section {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    margin-bottom: 25px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.role-counter {
-    margin-top: 10px;
-    font-size: 13px;
-}
-
-.role-counter {
-    color: var(--hot-red);
-}
-
-.role-counter:has(.✓) {
-    color: #48bb78;
-}
-
-.empty-value {
-    opacity: 0.5;
-    font-style: italic;
 }
 
 /* Admin */
