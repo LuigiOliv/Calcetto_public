@@ -1095,10 +1095,21 @@ function DebugPage({ users, votes }) {
 
     const players = users.filter(u => !u.id.startsWith('seed'));
 
-    if (selectedPlayer) {
-        const player = players.find(p => p.id === selectedPlayer);
-        const stats = getVoteStats(player.id);
-        const averages = utils.calculateAverages(player.id, votes);
+if (selectedPlayer) {
+    const player = players.find(p => p.id === selectedPlayer);
+    if (!player) {
+        return (
+            <div className="section-container">
+                <div className="section-header">
+                    <h2>🐛 Debug - Giocatore non trovato</h2>
+                    <button onClick={() => setSelectedPlayer(null)} className="btn-back">← Indietro</button>
+                </div>
+                <p>Giocatore con ID {selectedPlayer} non trovato</p>
+            </div>
+        );
+    }
+    const stats = getVoteStats(player.id);
+    const averages = utils.calculateAverages(player.id, votes, player); // 🆕 Passa player
         const overall = utils.calculateOverall(averages);
 
         return (
@@ -1119,14 +1130,15 @@ function DebugPage({ users, votes }) {
                 <div className="debug-table-wrapper">
                     <table className="debug-table">
                         <thead>
-                            <tr>
-                                <th>Votante</th>
-                                <th>Tipo</th>
-{(() => {
-    const playerSkills = getSkillsForPlayer(player);
-    return [...playerSkills.tecniche, ...playerSkills.tattiche, ...playerSkills.fisiche].map(skill => (<td key={skill}>{vote.ratings[skill] || '-'}</td>));
-})()}                                <th>Azioni</th>
-                            </tr>
+<tr>
+    <th>Votante</th>
+    <th>Tipo</th>
+    {(() => {
+        const playerSkills = getSkillsForPlayer(player);
+        return [...playerSkills.tecniche, ...playerSkills.tattiche, ...playerSkills.fisiche].map(skill => (<th key={skill}>{skill.substring(0, 6)}</th>));
+    })()}
+    <th>Azioni</th>
+</tr>
                         </thead>
                         <tbody>
                             {stats.allVotes.map((vote, index) => {
