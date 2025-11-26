@@ -244,7 +244,90 @@
                 </div>
             );
         }
+function RoleEditModal({ user, onClose, onSuccess }) {
+    const [preferredRole, setPreferredRole] = useState(user.preferredRole || '');
+    const [otherRoles, setOtherRoles] = useState(user.otherRoles || []);
 
+    const handleOtherRoleToggle = (role) => {
+        if (otherRoles.includes(role)) {
+            setOtherRoles(otherRoles.filter(r => r !== role));
+        } else {
+            setOtherRoles([...otherRoles, role]);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!preferredRole) { 
+            alert('Seleziona il tuo ruolo preferito'); 
+            return; 
+        }
+        if (otherRoles.length < 2) { 
+            alert('Seleziona almeno 2 altri ruoli'); 
+            return; 
+        }
+        
+        const updatedUser = { 
+            ...user, 
+            preferredRole, 
+            otherRoles 
+        };
+        
+        await storage.updateUser(updatedUser);
+        storage.setCurrentUser(updatedUser);
+        onSuccess();
+    };
+
+    const availableOtherRoles = ROLES.filter(r => r !== preferredRole);
+
+    return (
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <h2>✏️ Modifica Ruoli</h2>
+                <p>Aggiorna le tue preferenze di ruolo</p>
+                
+                <div className="form-group">
+                    <label>Qual è il tuo ruolo preferito? *</label>
+                    <select value={preferredRole} onChange={(e) => setPreferredRole(e.target.value)}>
+                        <option value="">-- Seleziona --</option>
+                        {ROLES.map(role => (
+                            <option key={role} value={role}>{role}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div className="form-group">
+                    <label>In quali altri ruoli ti adatti? (min. 2) *</label>
+                    <div className="checkbox-group">
+                        {availableOtherRoles.map(role => (
+                            <div key={role} className="checkbox-item">
+                                <input 
+                                    type="checkbox" 
+                                    id={`edit-role-${role}`} 
+                                    checked={otherRoles.includes(role)} 
+                                    onChange={() => handleOtherRoleToggle(role)} 
+                                />
+                                <label htmlFor={`edit-role-${role}`}>{role}</label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                <div className="modal-actions">
+                    <button className="btn btn-secondary" onClick={onClose}>
+                        Annulla
+                    </button>
+                    <button 
+                        className={`btn btn-primary ${(!preferredRole || otherRoles.length < 2) ? 'btn-disabled' : ''}`} 
+                        onClick={handleSubmit} 
+                        disabled={!preferredRole || otherRoles.length < 2}
+                    >
+                        Salva Modifiche {otherRoles.length < 2 && preferredRole ? `(${otherRoles.length}/2 ruoli)` : ''}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
         function Header({ user, onLogout }) {
             return (
                 <div className="header">
@@ -657,13 +740,18 @@ function SettingsPage({ user, onUpdateUser }) {
             {showSuccess && <div className="success-message">✓ Impostazioni aggiornate!</div>}
 
             {showRoleEdit && (
-                <RoleEditModal 
-                    user={user}
-                    onClose={() => setShowRoleEdit(false)}
-                    onSuccess={() => { setShowRoleEdit(false); setShowSuccess(true); setTimeout(() => setShowSuccess(false), 3000); }}
-                />
-            )}
-        </div>
+    <RoleEditModal 
+        user={user}
+        onClose={() => setShowRoleEdit(false)}
+        onSuccess={async () => { 
+            const updatedUser = await storage.getUsers().then(users => users.find(u => u.id === user.id));
+            await onUpdateUser(updatedUser);
+            setShowRoleEdit(false); 
+            setShowSuccess(true); 
+            setTimeout(() => setShowSuccess(false), 3000); 
+        }}
+    />
+)}        </div>
     );
 }
 
