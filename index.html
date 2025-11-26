@@ -83,6 +83,15 @@
             fisiche: ['Resistenza', 'Scatto', 'Progressione', 'Presenza fisica', 'Cazzimma']
         };
 
+		const SKILLS_GOALKEEPER = {
+    tecniche: ['Parate', 'Uscite', 'Rinvii (piedi)', 'Rilanci (mani)', 'Controllo palla'],
+    tattiche: ['Posizionamento', 'Comunicazione', 'Lettura del gioco', 'Gestione area', 'Prima costruzione'],
+    fisiche: ['Reattività/Agilità', 'Riflessi', 'Elevazione', 'Resistenza', 'Plasticità (tuffi)']
+};
+
+const getSkillsForPlayer = (player) => {
+    return player.isGoalkeeper ? SKILLS_GOALKEEPER : SKILLS;
+};
         const ROLES = [
             'Portiere', 'Difensore centrale', 'Difensore laterale sx', 'Difensore laterale dx',
             'Centrocampista difensivo', 'Centrocampista offensivo', 'Mezzala sx', 'Mezzala dx', 'Centravanti'
@@ -127,11 +136,12 @@
         };
 
         const utils = {
-            calculateAverages: (playerId, votes) => {
-                const playerVotes = votes.filter(v => v.playerId === playerId);
-                if (playerVotes.length === 0) return null;
-                const averages = {};
-                const allSkills = [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche];
+calculateAverages: (playerId, votes, player) => {
+    const playerVotes = votes.filter(v => v.playerId === playerId);
+    if (playerVotes.length === 0) return null;
+    const averages = {};
+    const skills = player ? getSkillsForPlayer(player) : SKILLS;
+    const allSkills = [...skills.tecniche, ...skills.tattiche, ...skills.fisiche];
                 allSkills.forEach(skill => {
                     const values = playerVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
                     if (values.length > 0) {
@@ -146,13 +156,16 @@
                 if (values.length === 0) return null;
                 return values.reduce((a, b) => a + b, 0) / values.length;
             },
-            calculateCategoryOverall: (averages, category) => {
-                if (!averages) return null;
-                const skills = SKILLS[category];
-                const values = skills.map(s => averages[s]).filter(v => v !== undefined);
-                if (values.length === 0) return null;
-                return values.reduce((a, b) => a + b, 0) / values.length;
-            },
+
+
+calculateCategoryOverall: (averages, category, player) => {
+    if (!averages) return null;
+    const skills = player ? getSkillsForPlayer(player) : SKILLS;
+    const categorySkills = skills[category];
+    const values = categorySkills.map(s => averages[s]).filter(v => v !== undefined);
+    if (values.length === 0) return null;
+    return values.reduce((a, b) => a + b, 0) / values.length;
+},
             countVotes: (playerId, votes) => {
                 return votes.filter(v => v.playerId === playerId).length;
             },
@@ -414,9 +427,10 @@ function RoleEditModal({ user, onClose, onSuccess }) {
                     {playersToVote.map(player => (
                         <div key={player.id} className="player-card" onClick={() => onSelectPlayer(player.id)}>
                             <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
-                            <h3>{player.name}</h3>
-                            <div className="status">
-                                {!player.isInitialPlayer && <span className="new-badge">⭐ NUOVO</span>}
+<h3>{player.name} {player.isGoalkeeper && '🧤'}</h3>
+<div className="status">
+    {player.isGoalkeeper && <span className="goalkeeper-badge">🧤 PORTIERE</span>}
+    {!player.isInitialPlayer && <span className="new-badge">⭐ NUOVO</span>}
                                 <div>Clicca per valutare</div>
                             </div>
                         </div>
@@ -427,11 +441,12 @@ function RoleEditModal({ user, onClose, onSuccess }) {
     );
 }
 
-        function RatingForm({ player, onSubmit, onCancel }) {
-            const [ratings, setRatings] = useState({});
+function RatingForm({ player, onSubmit, onCancel }) {
+    const [ratings, setRatings] = useState({});
+    const playerSkills = getSkillsForPlayer(player);
 
-            const isComplete = () => {
-                const allSkills = [...SKILLS.tecniche, ...SKILLS.tattiche, ...SKILLS.fisiche];
+    const isComplete = () => {
+        const allSkills = [...playerSkills.tecniche, ...playerSkills.tattiche, ...playerSkills.fisiche];
                 return allSkills.every(skill => ratings[skill]);
             };
 
@@ -444,11 +459,11 @@ function RoleEditModal({ user, onClose, onSuccess }) {
                 <div className="rating-form">
                     <div className="form-header">
                         <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
-                        <h2>Valuta {player.name}</h2>
+<h2>Valuta {player.name} {player.isGoalkeeper && '🧤'}</h2>>
                         <p>Scala: 1=Scarso | 2=Sufficiente | 3=Buono | 4=Ottimo</p>
                     </div>
-                    {Object.entries(SKILLS).map(([category, skills]) => (
-                        <div key={category} className="category-section">
+{Object.entries(playerSkills).map(([category, skills]) => (             
+	<div key={category} className="category-section">
                             <div className={`category-title category-${category}`}>{category.charAt(0).toUpperCase() + category.slice(1)}</div>
                             {skills.map(skill => (
                                 <div key={skill} className="skill-item">
@@ -550,6 +565,7 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
     const averages = utils.calculateAverages(player.id, votes);
     const overall = utils.calculateOverall(averages);
     const [flippedCard, setFlippedCard] = useState(null);
+	   const playerSkills = getSkillsForPlayer(player);
 
     const handleCardClick = (category) => {
         if (window.innerWidth <= 768) {
@@ -569,7 +585,7 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
                 </div>
                 
                 <div className="profile-header-info">
-                    <h2>{player.name}</h2>
+<h2>{player.name} {player.isGoalkeeper && '🧤'}</h2>
                     <div className="votes-count">Sulla basse di {voteCount} valutazioni ricevute</div>
                 </div>
                 
@@ -602,8 +618,8 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
 
             {hasEnoughVotes && averages ? (
                 <div className="charts-container">
-                    {Object.entries(SKILLS).map(([category, skills]) => {
-                        const catOverall = utils.calculateCategoryOverall(averages, category);
+{Object.entries(SKILLS).map(([category, skills]) => {
+    const catOverall = utils.calculateCategoryOverall(averages, category);
                         return (
                             <div 
                                 key={category} 
@@ -656,8 +672,8 @@ function PlayerProfile({ player, votes, isOwnProfile }) {
 function ClassifichePage({ users, votes, onViewProfile }) {
     const playersWithStats = users
         .filter(u => !u.id.startsWith('seed'))
-        .map(player => {
-            const averages = utils.calculateAverages(player.id, votes);
+.map(player => {
+    const averages = utils.calculateAverages(player.id, votes, player);
             const overall = utils.calculateOverall(averages);
             const voteCount = utils.countVotes(player.id, votes);
             return { ...player, overall, voteCount };
@@ -691,7 +707,7 @@ function ClassifichePage({ users, votes, onViewProfile }) {
                                 {player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}
                             </div>
                             <div style={{flex: 1}}>
-                                <div style={{fontWeight: '600', fontSize: '18px'}}>{player.name}</div>
+                                <div style={{fontWeight: '600', fontSize: '18px'}}>{player.name} {player.isGoalkeeper && '🧤'}</div>
                                 <div style={{fontSize: '13px', opacity: 0.8}}>{player.voteCount} valutazioni</div>
                             </div>
                             <div style={{fontWeight: '800', fontSize: '28px'}}>{utils.toBase10(player.overall).toFixed(2)}</div>
@@ -1249,8 +1265,9 @@ function DebugPage({ users, votes }) {
 
             const handleClaimProfile = async (playerId) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
-                const claimedUser = { ...users.find(u => u.id === playerId), email: pendingEmail, claimed: true, isAdmin };
-                await storage.updateUser(claimedUser);
+const user = users.find(u => u.id === playerId);
+const isGoalkeeper = user.preferredRole === 'Portiere';
+const claimedUser = { ...user, email: pendingEmail, claimed: true, isAdmin, isGoalkeeper };                await storage.updateUser(claimedUser);
                 const updatedUsers = users.map(u => u.id === playerId ? claimedUser : u);
                 setUsers(updatedUsers);
                 setCurrentUser(claimedUser);
@@ -1263,8 +1280,7 @@ function DebugPage({ users, votes }) {
 
             const handleNewPlayer = async (playerName) => {
                 const isAdmin = pendingEmail === ADMIN_EMAIL;
-                const newUser = { id: `player${users.length + 1}`, name: playerName || pendingEmail.split('@')[0], email: pendingEmail, avatar: null, preferredRole: null, otherRoles: [], claimed: true, isAdmin: isAdmin, isInitialPlayer: false, hasVotedOffline: false };
-                await storage.updateUser(newUser);
+const newUser = { id: `player${users.length + 1}`, name: playerName || pendingEmail.split('@')[0], email: pendingEmail, avatar: null, preferredRole: null, otherRoles: [], claimed: true, isAdmin: isAdmin, isInitialPlayer: false, hasVotedOffline: false, isGoalkeeper: false };                await storage.updateUser(newUser);
                 setUsers([...users, newUser]);
                 setCurrentUser(newUser);
                 storage.setCurrentUser(newUser);
@@ -1283,8 +1299,9 @@ function DebugPage({ users, votes }) {
                 setSelectedPlayer(null);
             };
 
-            const handleRolesSave = async (preferredRole, otherRoles) => {
-                const updatedCurrentUser = { ...currentUser, preferredRole, otherRoles };
+const handleRolesSave = async (preferredRole, otherRoles) => {
+    const isGoalkeeper = preferredRole === 'Portiere';
+    const updatedCurrentUser = { ...currentUser, preferredRole, otherRoles, isGoalkeeper };
                 await storage.updateUser(updatedCurrentUser);
                 const updatedUsers = users.map(u => u.id === currentUser.id ? updatedCurrentUser : u);
                 setUsers(updatedUsers);
