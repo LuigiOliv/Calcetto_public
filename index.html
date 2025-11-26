@@ -608,51 +608,50 @@ function SettingsPage({ user, onUpdateUser }) {
             </div>
             
             <div className="settings-group">
-                <h3>👤 Profilo</h3>
-                <div className="settings-profile">
+                <h3>Foto Profilo</h3>
+                <div className="settings-info">
                     <div className="settings-avatar">
                         {user.avatar ? <img src={user.avatar} alt={user.name} /> : utils.getInitials(user.name)}
                     </div>
-                    <div className="settings-info">
-                        <div className="settings-field">
-                            <div className="settings-label">Nome</div>
-                            <div className="settings-value">{user.name}</div>
-                        </div>
-                        <div className="settings-field">
-                            <div className="settings-label">Email</div>
-                            <div className="settings-email">{user.email}</div>
-                        </div>
-                        <div className="file-input-wrapper">
-                            <input type="file" id="avatar-upload" accept="image/*" onChange={handleFileChange} />
-                            <label htmlFor="avatar-upload" className="file-input-label">📷 Modifica Foto</label>
-                        </div>
+                    <div className="file-input-wrapper">
+                        <input type="file" id="avatar-upload" accept="image/*" onChange={handleFileChange} />
+                        <label htmlFor="avatar-upload" className="file-input-label">📷 Carica Foto</label>
                     </div>
                 </div>
             </div>
 
             <div className="settings-group">
-                <h3>⚽ Ruoli</h3>
-                <div className="settings-field">
-                    <div className="settings-label">Ruolo Preferito</div>
-                    <div className="settings-role-preferred">
-                        {user.preferredRole || 'Non impostato'}
+                <h3>Informazioni Account</h3>
+			<div className="settings-info-box">
+                   	 <div style={{marginBottom: '15px'}}><strong>Nome:</strong> {user.name}</div>
+                    	<div><strong>Email:</strong> {user.email}</div>
+                </div>
+            </div>
+
+            <div className="settings-group">
+                <h3>Ruoli</h3>
+<div className="settings-info-box">
+                    <div style={{marginBottom: '15px'}}>
+                        <strong>Ruolo preferito:</strong> {user.preferredRole || 'Non impostato'}
                     </div>
+                    <div style={{marginBottom: '15px'}}>
+    <strong>Altri ruoli:</strong> {user.otherRoles && user.otherRoles.length > 0 ? (
+        <>
+            {user.otherRoles.map((role, index) => (
+                <React.Fragment key={role}>
+                    <span className="role-badge">{role}</span>
+                    {index < user.otherRoles.length - 1 ? ', ' : ''}
+                </React.Fragment>
+            ))}
+        </>
+    ) : (
+        <span style={{color: '#718096'}}>Nessuno</span>
+    )}
+</div>
+                    <button className="btn btn-secondary" onClick={() => setShowRoleEdit(true)} style={{marginTop: '10px'}}>
+                        ✏️ Modifica Ruoli
+                    </button>
                 </div>
-                <div className="settings-field">
-                    <div className="settings-label">Altri Ruoli</div>
-                    {user.otherRoles && user.otherRoles.length > 0 ? (
-                        <div className="settings-roles-other">
-                            {user.otherRoles.map(role => (
-                                <span key={role} className="settings-role-item">{role}</span>
-                            ))}
-                        </div>
-                    ) : (
-                        <span className="settings-empty">Nessuno</span>
-                    )}
-                </div>
-                <button className="btn btn-secondary" onClick={() => setShowRoleEdit(true)}>
-                    ✏️ Modifica Ruoli
-                </button>
             </div>
 
             {showSuccess && <div className="success-message">✓ Impostazioni aggiornate!</div>}
@@ -661,17 +660,13 @@ function SettingsPage({ user, onUpdateUser }) {
                 <RoleEditModal 
                     user={user}
                     onClose={() => setShowRoleEdit(false)}
-                    onSuccess={async (updatedUser) => { 
-                        await onUpdateUser(updatedUser);
-                        setShowRoleEdit(false); 
-                        setShowSuccess(true); 
-                        setTimeout(() => setShowSuccess(false), 3000); 
-                    }}
+                    onSuccess={() => { setShowRoleEdit(false); setShowSuccess(true); setTimeout(() => setShowSuccess(false), 3000); }}
                 />
             )}
         </div>
     );
 }
+
 
 
 function AdminPage({ users, setUsers, votes, setVotes }) {
