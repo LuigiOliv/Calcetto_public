@@ -459,7 +459,7 @@ function RatingForm({ player, onSubmit, onCancel }) {
                 <div className="rating-form">
                     <div className="form-header">
                         <div className="avatar">{player.avatar ? <img src={player.avatar} alt={player.name} /> : utils.getInitials(player.name)}</div>
-<h2>Valuta {player.name} {player.isGoalkeeper && '🧤'}</h2>>
+<h2>Valuta {player.name} {player.isGoalkeeper && '🧤'}</h2>
                         <p>Scala: 1=Scarso | 2=Sufficiente | 3=Buono | 4=Ottimo</p>
                     </div>
 {Object.entries(playerSkills).map(([category, skills]) => (             
