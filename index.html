@@ -177,14 +177,15 @@ deleteMatch: async (matchId) => {
 // ============================================================================
 // FUNZIONI REGISTRATIONS
 // ============================================================================
-
+			
 // Ottiene tutte le iscrizioni per una partita
 getRegistrations: async (matchId) => {
     const snapshot = await db.collection('registrations')
         .where('matchId', '==', matchId)
-        .orderBy('registeredAt', 'asc')
         .get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Ordina lato client per evitare indice composito
+    return registrations.sort((a, b) => a.registeredAt - b.registeredAt);
 },
 
 // Iscrive un giocatore
