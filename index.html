@@ -1475,6 +1475,117 @@ function AdminPage({ users, setUsers, votes, setVotes }) {
     const [editingVotes, setEditingVotes] = useState(null);
     const [voteValues, setVoteValues] = useState({});
 
+
+// === STATI PER GESTIONE PARTITE ===
+    const [showCreateMatch, setShowCreateMatch] = useState(false);
+    const [newMatchDate, setNewMatchDate] = useState('');
+    const [newMatchTime, setNewMatchTime] = useState('21:20');
+    const [newMatchLocation, setNewMatchLocation] = useState('Campo SuperSantos, Portici');
+    const [newMatchMaxPlayers, setNewMatchMaxPlayers] = useState(18);
+    const [adminMatches, setAdminMatches] = useState([]);
+    const [adminRegistrations, setAdminRegistrations] = useState({});
+
+    // Carica partite all'avvio
+    useEffect(() => {
+        loadAdminMatches();
+    }, []);
+
+    const loadAdminMatches = async () => {
+        try {
+            const matches = await storage.getMatches();
+            setAdminMatches(matches);
+            
+            // Carica iscrizioni per ogni partita
+            const regsMap = {};
+            for (const match of matches) {
+                const regs = await storage.getRegistrations(match.id);
+                regsMap[match.id] = regs;
+            }
+            setAdminRegistrations(regsMap);
+        } catch (error) {
+            console.error('Errore caricamento partite admin:', error);
+        }
+    };
+
+    const handleCreateMatch = async () => {
+        if (!newMatchDate || !newMatchTime || !newMatchLocation) {
+            alert('Compila tutti i campi obbligatori');
+            return;
+        }
+
+        try {
+            // Costruisci data completa
+            const matchDateTime = new Date(`${newMatchDate}T${newMatchTime}:00`);
+            
+            // Deadline display: 4 giorni prima alle 20:00
+            const regDeadlineDisplay = new Date(matchDateTime);
+            regDeadlineDisplay.setDate(regDeadlineDisplay.getDate() - 4);
+            regDeadlineDisplay.setHours(20, 0, 0, 0);
+            
+            // Deadline forzata: 50 minuti prima della partita
+            const regDeadlineForced = new Date(matchDateTime);
+            regDeadlineForced.setMinutes(regDeadlineForced.getMinutes() - 50);
+            
+            // Deadline voti: 3 giorni dopo alle 24:00
+            const votingDeadline = new Date(matchDateTime);
+            votingDeadline.setDate(votingDeadline.getDate() + 3);
+            votingDeadline.setHours(24, 0, 0, 0);
+
+            await storage.createMatch({
+                date: matchDateTime.toISOString(),
+                location: newMatchLocation,
+                maxPlayers: parseInt(newMatchMaxPlayers),
+                registrationDeadlineDisplay: regDeadlineDisplay.toISOString(),
+                registrationDeadlineForced: regDeadlineForced.toISOString(),
+                votingDeadline: votingDeadline.toISOString()
+            });
+
+            // Reset form
+            setNewMatchDate('');
+            setNewMatchTime('21:20');
+            setNewMatchLocation('Campo SuperSantos, Portici');
+            setNewMatchMaxPlayers(18);
+            setShowCreateMatch(false);
+            
+            showSuccessMsg('Partita creata!');
+            await loadAdminMatches();
+        } catch (error) {
+            console.error('Errore creazione partita:', error);
+            alert('Errore durante la creazione della partita');
+        }
+    };
+
+    const handleCloseRegistrations = async (matchId) => {
+        if (!confirm('Chiudere le iscrizioni per questa partita?')) return;
+        
+        try {
+            await storage.updateMatch(matchId, { status: 'CLOSED' });
+            showSuccessMsg('Iscrizioni chiuse!');
+            await loadAdminMatches();
+        } catch (error) {
+            console.error('Errore chiusura iscrizioni:', error);
+            alert('Errore durante la chiusura');
+        }
+    };
+
+    const handleDeleteMatch = async (matchId) => {
+        if (!confirm('⚠️ ATTENZIONE: Eliminare questa partita e tutte le iscrizioni?')) return;
+        if (!confirm('Conferma: sei sicuro di voler eliminare tutto?')) return;
+        
+        try {
+            await storage.deleteMatch(matchId);
+            showSuccessMsg('Partita eliminata!');
+            await loadAdminMatches();
+        } catch (error) {
+            console.error('Errore eliminazione partita:', error);
+            alert('Errore durante l\'eliminazione');
+        }
+    };
+
+
+
+
+	
     const showSuccessMsg = (msg) => {
         setSuccessMessage(msg);
         setShowSuccess(true);
@@ -1641,6 +1752,121 @@ const averages = utils.calculateAverages(player.id, votes, player);
                 </div>
             </div>
 
+<div className="settings-group">
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                    <h3>🏆 Gestione Partite</h3>
+                    <button className="btn btn-primary" onClick={() => setShowCreateMatch(!showCreateMatch)}>
+                        {showCreateMatch ? '✕ Annulla' : '+ Crea Partita'}
+                    </button>
+                </div>
+
+                {showCreateMatch && (
+                    <div className="admin-create-match">
+                        <h4>Crea Nuova Partita</h4>
+                        
+                        <div className="form-group">
+                            <label>Data Partita *</label>
+                            <input 
+                                type="date" 
+                                value={newMatchDate}
+                                onChange={(e) => setNewMatchDate(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Orario *</label>
+                            <input 
+                                type="time" 
+                                value={newMatchTime}
+                                onChange={(e) => setNewMatchTime(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Location *</label>
+                            <input 
+                                type="text" 
+                                value={newMatchLocation}
+                                onChange={(e) => setNewMatchLocation(e.target.value)}
+                                placeholder="Es: Campo SuperSantos, Portici"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Max Giocatori</label>
+                            <input 
+                                type="number" 
+                                min="10"
+                                max="30"
+                                value={newMatchMaxPlayers}
+                                onChange={(e) => setNewMatchMaxPlayers(e.target.value)}
+                            />
+                        </div>
+
+                        <button 
+                            className="btn btn-primary" 
+                            onClick={handleCreateMatch}
+                            disabled={!newMatchDate || !newMatchTime || !newMatchLocation}
+                        >
+                            ✓ Crea Partita
+                        </button>
+                    </div>
+                )}
+
+                <div className="admin-matches-list">
+                    {adminMatches.map(match => {
+                        const regs = adminRegistrations[match.id] || [];
+                        return (
+                            <div key={match.id} className="admin-match-item">
+                                <div className="admin-match-header">
+                                    <span className={`match-status ${match.status.toLowerCase()}`}>
+                                        {match.status === 'OPEN' && '📝 APERTA'}
+                                        {match.status === 'CLOSED' && '🔒 CHIUSA'}
+                                        {match.status === 'VOTING' && '⭐ VOTAZIONI'}
+                                        {match.status === 'COMPLETED' && '✅ FINITA'}
+                                    </span>
+                                    <span className="admin-match-date">{utils.formatMatchDate(match.date)}</span>
+                                </div>
+                                
+                                <div className="admin-match-info">
+                                    <span>📍 {match.location}</span>
+                                    <span>👥 {regs.length}/{match.maxPlayers}</span>
+                                </div>
+
+                                <div className="admin-match-actions">
+                                    {match.status === 'OPEN' && (
+                                        <button 
+                                            className="admin-action-btn close"
+                                            onClick={() => handleCloseRegistrations(match.id)}
+                                        >
+                                            🔒 Chiudi Iscrizioni
+                                        </button>
+                                    )}
+                                    {match.status === 'CLOSED' && (
+                                        <button 
+                                            className="admin-action-btn assign"
+                                            onClick={() => alert('Assegnazione squadre in sviluppo')}
+                                        >
+                                            👥 Assegna Squadre
+                                        </button>
+                                    )}
+                                    <button 
+                                        className="admin-action-btn delete"
+                                        onClick={() => handleDeleteMatch(match.id)}
+                                    >
+                                        🗑️ Elimina
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+
+
+
+			
             <div className="settings-group admin-danger-zone">
                 <h3>⚠️ Zona Pericolosa</h3>
                 <p>Azioni irreversibili!</p>
