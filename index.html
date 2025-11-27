@@ -258,7 +258,7 @@ updateMatchVote: async (matchId, voterId, votes) => {
         votes,
         lastModifiedAt: Date.now()
     });
-}			
+},			
             getCurrentUser: () => JSON.parse(localStorage.getItem('calcetto_current_user') || 'null'),
             setCurrentUser: (user) => localStorage.setItem('calcetto_current_user', JSON.stringify(user)),
             clearAll: () => {
