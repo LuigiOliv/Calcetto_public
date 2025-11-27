@@ -104,17 +104,10 @@
 
 		
 const getSkillsForPlayer = (player) => {
-    if (player.isGoalkeeper) {
-        return {
-            skills: SKILLS_GOALKEEPER,
-            shortSkill: shortSKILLS_GK
-        };
-    } else {
-        return {
-            skills: SKILLS,
-            shortSkills: SHORTSKILLS
-        };
-    }
+    return player.isGoalkeeper ? SKILLS_GOALKEEPER : SKILLS;
+};
+const getShortSkillsForPlayer = (player) => {
+    return player.isGoalkeeper ? shortSKILLS_GK : shortSKILLS;
 };
 
         const ROLES = [
