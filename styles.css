@@ -492,6 +492,107 @@ p {
 }
 
 /* ============================================================================
+   PARTITE - MOBILE FIRST
+   ============================================================================ */
+
+/* CARD LAYOUT BASE (Mobile) */
+.players-grid .player-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    text-align: left;
+    padding: 20px;
+}
+
+.match-card-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.match-card-center {
+    flex: 1;
+}
+
+.match-card-center h3 {
+    font-size: 1.4rem;
+    margin: 0;
+    color: white;
+    font-family: 'Teko', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+.match-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    text-align: left;
+}
+
+.match-info {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.4;
+}
+
+/* Stati partita - colori bordino (stesso su mobile e desktop) */
+.player-card.open::before {
+    background: var(--volt);
+}
+
+.player-card.voting::before {
+    background: var(--electric-blue);
+}
+
+.player-card.completed::before {
+    background: #6B7280;
+}
+
+/* Match status badge */
+.match-status.open {
+    background: rgba(210, 248, 0, 0.2);
+    color: var(--volt);
+}
+
+.match-status.voting {
+    background: rgba(0, 240, 255, 0.2);
+    color: var(--electric-blue);
+}
+
+.match-status.completed {
+    background: rgba(107, 114, 128, 0.2);
+    color: #9CA3AF;
+}
+
+/* DESKTOP: Layout a 3 colonne */
+@media (min-width: 768px) {
+    .players-grid .player-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 15px;
+        align-items: center;
+        flex-direction: row;
+    }
+    
+    .match-card-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .match-card-right {
+        align-items: flex-end;
+        text-align: right;
+    }
+}
+
+
+/* ============================================================================
    PLAYER CARDS GRID - MOBILE FIRST
    ============================================================================ */
 
