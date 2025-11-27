@@ -492,69 +492,165 @@ p {
 }
 
 /* ============================================================================
-   PARTITE - MOBILE FIRST
+   TAB PARTITE - CSS DEDICATO
    ============================================================================ */
 
-/* CARD LAYOUT BASE (Mobile) */
-.player-card {
+/* LISTA PARTITE - Container */
+.matches-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-    text-align: left;
-    padding: 20px;
+    gap: 15px;
+    width: 100%;
 }
 
+/* Desktop: centra al 60% */
+@media (min-width: 768px) {
+    .matches-list {
+        max-width: 60%;
+        margin: 0 auto;
+    }
+}
+
+/* ============================================================================
+   MATCH CARD - Mobile First
+   ============================================================================ */
+
+.match-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Bordino laterale */
+.match-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-3px);
+    background: var(--bg-hover);
+    box-shadow: 0 0 20px rgba(210, 248, 0, 0.15);
+    border-color: var(--volt);
+}
+
+.match-card:hover::before {
+    width: 6px;
+    box-shadow: 0 0 10px currentColor;
+}
+
+/* Desktop: layout orizzontale 3 colonne */
+@media (min-width: 768px) {
+    .match-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 20px;
+        align-items: center;
+        padding: 25px 30px;
+    }
+}
+
+/* ============================================================================
+   SEZIONI CARD
+   ============================================================================ */
+
+/* Sinistra: Badge status */
 .match-card-left {
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 10px;
 }
 
+@media (min-width: 768px) {
+    .match-card-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Centro: Data partita */
 .match-card-center {
     flex: 1;
 }
 
 .match-card-center h3 {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     margin: 0;
     color: white;
     font-family: 'Teko', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     line-height: 1.2;
 }
 
+@media (min-width: 768px) {
+    .match-card-center h3 {
+        font-size: 1.8rem;
+    }
+}
+
+/* Destra: Info dettagliate */
 .match-card-right {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 5px;
-    text-align: left;
+}
+
+@media (min-width: 768px) {
+    .match-card-right {
+        align-items: flex-end;
+        text-align: right;
+    }
 }
 
 .match-info {
     color: var(--text-muted);
     font-size: 0.85rem;
     font-family: 'Roboto', sans-serif;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
-/* Stati partita - colori bordino (stesso su mobile e desktop) */
-.player-card.open::before {
+/* ============================================================================
+   STATI PARTITA
+   ============================================================================ */
+
+/* Colori bordino sinistro */
+.match-card.open::before {
     background: var(--volt);
 }
 
-.player-card.voting::before {
+.match-card.voting::before {
     background: var(--electric-blue);
 }
 
-.player-card.completed::before {
+.match-card.completed::before {
     background: #6B7280;
 }
 
-/* Match status badge */
+/* Badge status */
+.match-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .match-status.open {
     background: rgba(210, 248, 0, 0.2);
     color: var(--volt);
@@ -569,34 +665,6 @@ p {
     background: rgba(107, 114, 128, 0.2);
     color: #9CA3AF;
 }
-
-/* LISTA PARTITE - 1 colonna */
-.players-grid {
-    display: grid;
-    grid-template-columns: 1fr;  /* 👈 MODIFICA: 1 colonna invece di auto-fill */
-    gap: 15px;
-}
-
-/* Desktop: mantieni 1 colonna, ma centra a 60% */
-@media (min-width: 768px) {
-    .players-grid {
-        grid-template-columns: 1fr;
-        max-width: 60%;
-        margin: 0 auto;
-    }
-}
-    
-    .match-card-left {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .match-card-right {
-        align-items: flex-end;
-        text-align: right;
-    }
-}
-
 
 /* ============================================================================
    PLAYER CARDS GRID - MOBILE FIRST
