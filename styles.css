@@ -496,14 +496,13 @@ p {
    ============================================================================ */
 
 /* CARD LAYOUT BASE (Mobile) */
-.players-grid .player-card {
+.player-card {
     display: flex;
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
     text-align: left;
     padding: 20px;
-      width: 100%;  /* 👈 AGGIUNGI */
 }
 
 .match-card-left {
@@ -571,17 +570,21 @@ p {
     color: #9CA3AF;
 }
 
-/* DESKTOP: Layout a 3 colonne */
+/* LISTA PARTITE - 1 colonna */
+.players-grid {
+    display: grid;
+    grid-template-columns: 1fr;  /* 👈 MODIFICA: 1 colonna invece di auto-fill */
+    gap: 15px;
+}
+
+/* Desktop: mantieni 1 colonna, ma centra a 60% */
 @media (min-width: 768px) {
-    .players-grid .player-card {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 15px;
-        align-items: center;
-        flex-direction: row;
-              max-width: 50%;  /* 👈 AGGIUNGI */
-        margin: 0 auto;  /* 👈 AGGIUNGI */
+    .players-grid {
+        grid-template-columns: 1fr;
+        max-width: 60%;
+        margin: 0 auto;
     }
+}
     
     .match-card-left {
         flex-direction: column;
