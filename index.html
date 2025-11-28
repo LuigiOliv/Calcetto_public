@@ -1007,11 +1007,13 @@ function MatchRegistrationView({ match, currentUser, users, onBack, onUpdate }) 
                                 >
                                     {actionLoading ? 'Attendere...' : '✓ ISCRIVITI'}
                                 </button>
-                            )
-                        )}
+                        </div>
                     </div>
-</div>
-            </div>
+                </div>
+            )}
+        </div>  {/* Fine section-container */}
+    );
+}
 
             {/* 🆕 MODALE AGGIUNGI GIOCATORE */}
             {showAddPlayerModal && (
