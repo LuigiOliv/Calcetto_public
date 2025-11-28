@@ -905,115 +905,115 @@ function MatchRegistrationView({ match, currentUser, users, onBack, onUpdate }) 
     }
 
     return (
-        <div className="section-container">
-            <div className="detail-card">
-                <div className="detail-header">
-                    <span className={`match-status ${isClosed ? 'completed' : 'open'}`}>
-                        {isClosed ? '🔒 ISCRIZIONI CHIUSE' : '📝 ISCRIZIONI APERTE'}
-                    </span>
+        <>
+            <div className="section-container">
+                <div className="detail-card">
+                    <div className="detail-header">
+                        <span className={`match-status ${isClosed ? 'completed' : 'open'}`}>
+                            {isClosed ? '🔒 ISCRIZIONI CHIUSE' : '📝 ISCRIZIONI APERTE'}
+                        </span>
 
-                    <div className="header-info-grid">
-                        <div className="header-main">
-                            <div className="detail-date">{utils.formatMatchDateFull(match.date)}</div>
-                            <div className="detail-time">⏰ Ore {utils.formatTime(match.date)}</div>
-                            <div className="detail-location">📍 {match.location}</div>
-                        </div>
-                        <div className="header-aside">
-                            <div className="recap-box">
-                                <div className="recap-row">
-                                    {utils.renderGoalkeeperIcons(countGoalkeepers())}
-                                    <span><strong>{registrations.length}</strong>/{match.maxPlayers}</span>
-                                </div>
+                        <div className="header-info-grid">
+                            <div className="header-main">
+                                <div className="detail-date">{utils.formatMatchDateFull(match.date)}</div>
+                                <div className="detail-time">⏰ Ore {utils.formatTime(match.date)}</div>
+                                <div className="detail-location">📍 {match.location}</div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="detail-content">
-                    <div className="players-list">
-                        <h3>👥 Chi Gioca ({registrations.length})</h3>
-                        {registrations.length === 0 ? (
-                            <div className="no-votes">
-                                <p>Nessun iscritto ancora. Sii il primo!</p>
-                            </div>
-                        ) : (
-                            registrations.map(reg => (
-                                <div key={reg.id} className={`player-item ${reg.isGoalkeeper ? 'gk' : ''}`}>
-                                    <div className="avatar">{utils.getInitials(reg.playerName)}</div>
-                                    <div className="player-info">
-                                        <div className="player-name">
-                                            {reg.playerName}
-                                            {reg.playerId === currentUser.id && ' (Tu)'}
-                                        </div>
-                                        <div className="player-role">
-                                            {reg.isGoalkeeper ? '🧤 Portiere' : 'Movimento'}
-                                        </div>
+                            <div className="header-aside">
+                                <div className="recap-box">
+                                    <div className="recap-row">
+                                        {utils.renderGoalkeeperIcons(countGoalkeepers())}
+                                        <span><strong>{registrations.length}</strong>/{match.maxPlayers}</span>
                                     </div>
-
-                                    {/* X ROSSA: mostra solo se sono io O se sono admin */}
-                                    {(reg.playerId === currentUser.id || currentUser.isAdmin) && !isClosed && (
-                                        <div 
-                                            className="unsubscribe-btn" 
-                                            onClick={() => handleUnregister(reg.playerId, reg.playerName)}
-                                        >
-                                            ✕
-                                        </div>
-                                    )}
                                 </div>
-                            ))
-                        )}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* 🆕 ADMIN: AGGIUNGI GIOCATORE */}
-                    {currentUser.isAdmin && !isClosed && (
-                        <div className="admin-add-player">
-                            <button 
-                                className="btn-add-player" 
-                                onClick={() => setShowAddPlayerModal(true)}
-                            >
-                                + AGGIUNGI GIOCATORE
-                            </button>
-                        </div>
-                    )}
-
-                    {!isClosed && (
-                        <div className="deadline-msg">
-                            Iscriviti entro le ore 20 del {utils.formatDeadlineDisplay(match.registrationDeadlineDisplay)}<br/>
-                            per avere la possibilità di cambiare campo se necessario
-                        </div>
-                    )}
-
-                    {isClosed && (
-                        <div className="deadline-msg closed">
-                            Le iscrizioni sono chiuse.<br/>
-                            L'admin sta preparando le squadre!
-                        </div>
-                    )}
-
-                    <div className="btn-group">
-                        <button className="btn btn-secondary" onClick={onBack}>
-                            ← INDIETRO
-                        </button>
-                        {!isClosed && (
-                            isRegistered ? (
-                                <button className="btn btn-registered" disabled>
-                                    ✓ SONO GIÀ ISCRITTO
-                                </button>
+                    <div className="detail-content">
+                        <div className="players-list">
+                            <h3>👥 Chi Gioca ({registrations.length})</h3>
+                            {registrations.length === 0 ? (
+                                <div className="no-votes">
+                                    <p>Nessun iscritto ancora. Sii il primo!</p>
+                                </div>
                             ) : (
+                                registrations.map(reg => (
+                                    <div key={reg.id} className={`player-item ${reg.isGoalkeeper ? 'gk' : ''}`}>
+                                        <div className="avatar">{utils.getInitials(reg.playerName)}</div>
+                                        <div className="player-info">
+                                            <div className="player-name">
+                                                {reg.playerName}
+                                                {reg.playerId === currentUser.id && ' (Tu)'}
+                                            </div>
+                                            <div className="player-role">
+                                                {reg.isGoalkeeper ? '🧤 Portiere' : 'Movimento'}
+                                            </div>
+                                        </div>
+
+                                        {/* X ROSSA: mostra solo se sono io O se sono admin */}
+                                        {(reg.playerId === currentUser.id || currentUser.isAdmin) && !isClosed && (
+                                            <div 
+                                                className="unsubscribe-btn" 
+                                                onClick={() => handleUnregister(reg.playerId, reg.playerName)}
+                                            >
+                                                ✕
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* 🆕 ADMIN: AGGIUNGI GIOCATORE */}
+                        {currentUser.isAdmin && !isClosed && (
+                            <div className="admin-add-player">
                                 <button 
-                                    className="btn btn-primary" 
-                                    onClick={handleRegister} 
-                                    disabled={actionLoading}
+                                    className="btn-add-player" 
+                                    onClick={() => setShowAddPlayerModal(true)}
                                 >
-                                    {actionLoading ? 'Attendere...' : '✓ ISCRIVITI'}
+                                    + AGGIUNGI GIOCATORE
                                 </button>
+                            </div>
+                        )}
+
+                        {!isClosed && (
+                            <div className="deadline-msg">
+                                Iscriviti entro le ore 20 del {utils.formatDeadlineDisplay(match.registrationDeadlineDisplay)}<br/>
+                                per avere la possibilità di cambiare campo se necessario
+                            </div>
+                        )}
+
+                        {isClosed && (
+                            <div className="deadline-msg closed">
+                                Le iscrizioni sono chiuse.<br/>
+                                L'admin sta preparando le squadre!
+                            </div>
+                        )}
+
+                        <div className="btn-group">
+                            <button className="btn btn-secondary" onClick={onBack}>
+                                ← INDIETRO
+                            </button>
+                            {!isClosed && (
+                                isRegistered ? (
+                                    <button className="btn btn-registered" disabled>
+                                        ✓ SONO GIÀ ISCRITTO
+                                    </button>
+                                ) : (
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={handleRegister} 
+                                        disabled={actionLoading}
+                                    >
+                                        {actionLoading ? 'Attendere...' : '✓ ISCRIVITI'}
+                                    </button>
+                                )
+                            )}
                         </div>
                     </div>
                 </div>
-            )}
-        </div>  {/* Fine section-container */}
-    );
-}
+            </div>
 
             {/* 🆕 MODALE AGGIUNGI GIOCATORE */}
             {showAddPlayerModal && (
@@ -1070,11 +1070,9 @@ function MatchRegistrationView({ match, currentUser, users, onBack, onUpdate }) 
                     </div>
                 </div>
             )}
-        </div>
-        </div>
+        </>
     );
 }
-
 
 // ============================================================================
 // VISTA VOTAZIONI PARTITA
