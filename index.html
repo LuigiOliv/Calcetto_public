@@ -332,17 +332,17 @@ checkAndUpdateMatchStatus: async (match) => {
     }
     
     return match;
-},  // 👈 Chiude oggetto storage
+};  // 👈 Chiude oggetto storage
 
 
-		
-	const utils = {
-		calculateAverages: (playerId, votes, player) => {
-    const playerVotes = votes.filter(v => v.playerId === playerId);
-    if (playerVotes.length === 0) return null;
-    const averages = {};
-    const skills = player ? getSkillsForPlayer(player) : SKILLS;
-    const allSkills = [...skills.tecniche, ...skills.tattiche, ...skills.fisiche];
+        
+        const utils = {
+            calculateAverages: (playerId, votes, player) => {
+                const playerVotes = votes.filter(v => v.playerId === playerId);
+                if (playerVotes.length === 0) return null;
+                const averages = {};
+                const skills = player ? getSkillsForPlayer(player) : SKILLS;
+                const allSkills = [...skills.tecniche, ...skills.tattiche, ...skills.fisiche];
                 allSkills.forEach(skill => {
                     const values = playerVotes.map(v => v.ratings[skill]).filter(v => v !== undefined);
                     if (values.length > 0) {
@@ -359,14 +359,14 @@ checkAndUpdateMatchStatus: async (match) => {
             },
 
 
-calculateCategoryOverall: (averages, category, player) => {
-    if (!averages) return null;
-    const skills = player ? getSkillsForPlayer(player) : SKILLS;
-    const categorySkills = skills[category];
-    const values = categorySkills.map(s => averages[s]).filter(v => v !== undefined);
-    if (values.length === 0) return null;
-    return values.reduce((a, b) => a + b, 0) / values.length;
-},
+            calculateCategoryOverall: (averages, category, player) => {
+                if (!averages) return null;
+                const skills = player ? getSkillsForPlayer(player) : SKILLS;
+                const categorySkills = skills[category];
+                const values = categorySkills.map(s => averages[s]).filter(v => v !== undefined);
+                if (values.length === 0) return null;
+                return values.reduce((a, b) => a + b, 0) / values.length;
+            },
             countVotes: (playerId, votes) => {
                 return votes.filter(v => v.playerId === playerId).length;
             },
@@ -377,73 +377,73 @@ calculateCategoryOverall: (averages, category, player) => {
                 return name.substring(0, 2).toUpperCase();
             },
 
-// ============================================================================
-// HELPER FUNCTIONS PER PARTITE - Aggiungi dentro l'oggetto utils
-// ============================================================================
+            // ============================================================================
+            // HELPER FUNCTIONS PER PARTITE - Aggiungi dentro l'oggetto utils
+            // ============================================================================
 
-// Formatta data partita (es: "Giovedì 29 Novembre")
-formatMatchDate: (dateString) => {
-    const date = new Date(dateString);
-    const giorni = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-    const mesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
-                  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-    return `${giorni[date.getDay()]} ${date.getDate()} ${mesi[date.getMonth()]}`;
-},
+            // Formatta data partita (es: "Giovedì 29 Novembre")
+            formatMatchDate: (dateString) => {
+                const date = new Date(dateString);
+                const giorni = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+                const mesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                              'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+                return `${giorni[date.getDay()]} ${date.getDate()} ${mesi[date.getMonth()]}`;
+            },
 
-// Formatta data completa (es: "Giovedì 29 Novembre 2024")
-formatMatchDateFull: (dateString) => {
-    const date = new Date(dateString);
-    const giorni = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-    const mesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
-                  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-    return `${giorni[date.getDay()]} ${date.getDate()} ${mesi[date.getMonth()]} ${date.getFullYear()}`;
-},
+            // Formatta data completa (es: "Giovedì 29 Novembre 2024")
+            formatMatchDateFull: (dateString) => {
+                const date = new Date(dateString);
+                const giorni = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+                const mesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                              'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+                return `${giorni[date.getDay()]} ${date.getDate()} ${mesi[date.getMonth()]} ${date.getFullYear()}`;
+            },
 
-// Formatta ora (es: "21:20")
-formatTime: (dateString) => {
-    const date = new Date(dateString);
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-},
+            // Formatta ora (es: "21:20")
+            formatTime: (dateString) => {
+                const date = new Date(dateString);
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${hours}:${minutes}`;
+            },
 
-// Formatta deadline display (es: "lunedì 24 novembre")
-formatDeadlineDisplay: (dateString) => {
-    const date = new Date(dateString);
-    const giorni = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-    const mesi = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 
-                  'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
-    return `${giorni[date.getDay()]} ${date.getDate()} ${mesi[date.getMonth()]}`;
-},
+            // Formatta deadline display (es: "lunedì 24 novembre")
+            formatDeadlineDisplay: (dateString) => {
+                const date = new Date(dateString);
+                const giorni = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+                const mesi = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 
+                              'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+                return `${giorni[date.getDay()]} ${date.getDate()} ${mesi[date.getMonth()]}`;
+            },
 
-// Formatta deadline breve (es: "Lun 24, 20:00")
-formatDeadline: (dateString) => {
-    const date = new Date(dateString);
-    const giorni = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-    const day = date.getDate();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${giorni[date.getDay()]} ${day}, ${hours}:${minutes}`;
-},
+            // Formatta deadline breve (es: "Lun 24, 20:00")
+            formatDeadline: (dateString) => {
+                const date = new Date(dateString);
+                const giorni = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+                const day = date.getDate();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${giorni[date.getDay()]} ${day}, ${hours}:${minutes}`;
+            },
 
-// Renderizza icone guanti portieri (0, 1 o 2)
-renderGoalkeeperIcons: (count) => {
-    if (count === 0) return '';
-    if (count === 1) return '🧤';
-    return '🧤🧤';
-},
+            // Renderizza icone guanti portieri (0, 1 o 2)
+            renderGoalkeeperIcons: (count) => {
+                if (count === 0) return '';
+                if (count === 1) return '🧤';
+                return '🧤🧤';
+            },
 
-// Trova il nome di un giocatore dal suo ID
-getPlayerNameById: (playerId, users) => {
-    // Prova prima con users se disponibile
-    if (users && users.length > 0) {
-        const player = users.find(u => u.id === playerId);
-        if (player) return player.name;
-    }
-    // Fallback: mostra solo ID
-    return playerId;
-}
-};
+            // Trova il nome di un giocatore dal suo ID
+            getPlayerNameById: (playerId, users) => {
+                // Prova prima con users se disponibile
+                if (users && users.length > 0) {
+                    const player = users.find(u => u.id === playerId);
+                    if (player) return player.name;
+                }
+                // Fallback: mostra solo ID
+                return playerId;
+            }
+        };
 
         function LoginPage({ onLogin }) {
             const [loading, setLoading] = useState(false);
@@ -1879,32 +1879,32 @@ function SettingsPage({ user, onUpdateUser }) {
 
             <div className="settings-group">
                 <h3>Informazioni Account</h3>
-			<div className="settings-info-box">
-                   	 <div style={{marginBottom: '15px'}}><strong>Nome:</strong> {user.name}</div>
-                    	<div><strong>Email:</strong> {user.email}</div>
+                <div className="settings-info-box">
+                    <div style={{marginBottom: '15px'}}><strong>Nome:</strong> {user.name}</div>
+                    <div><strong>Email:</strong> {user.email}</div>
                 </div>
             </div>
 
             <div className="settings-group">
                 <h3>Ruoli</h3>
-<div className="settings-info-box">
+                <div className="settings-info-box">
                     <div style={{marginBottom: '15px'}}>
                         <strong>Ruolo preferito:</strong> {user.preferredRole || 'Non impostato'}
                     </div>
                     <div style={{marginBottom: '15px'}}>
-    <strong>Altri ruoli:</strong> {user.otherRoles && user.otherRoles.length > 0 ? (
-        <>
-            {user.otherRoles.map((role, index) => (
-                <React.Fragment key={role}>
-                    <span className="role-badge">{role}</span>
-                    {index < user.otherRoles.length - 1 ? ', ' : ''}
-                </React.Fragment>
-            ))}
-        </>
-    ) : (
-        <span style={{color: '#718096'}}>Nessuno</span>
-    )}
-</div>
+                        <strong>Altri ruoli:</strong>
+                        <div style={{marginTop: '8px'}}>
+                            {user.otherRoles && user.otherRoles.length > 0 ? (
+                                <div className="role-badges">
+                                    {user.otherRoles.map(role => (
+                                        <span key={role} className="role-badge">{role}</span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <span style={{color: '#718096'}}>Nessuno</span>
+                            )}
+                        </div>
+                    </div>
                     <button className="btn btn-secondary" onClick={() => setShowRoleEdit(true)} style={{marginTop: '10px'}}>
                         ✏️ Modifica Ruoli
                     </button>
@@ -1914,18 +1914,19 @@ function SettingsPage({ user, onUpdateUser }) {
             {showSuccess && <div className="success-message">✓ Impostazioni aggiornate!</div>}
 
             {showRoleEdit && (
-    <RoleEditModal 
-        user={user}
-        onClose={() => setShowRoleEdit(false)}
-        onSuccess={async () => { 
-            const updatedUser = await storage.getUsers().then(users => users.find(u => u.id === user.id));
-            await onUpdateUser(updatedUser);
-            setShowRoleEdit(false); 
-            setShowSuccess(true); 
-            setTimeout(() => setShowSuccess(false), 3000); 
-        }}
-    />
-)}        </div>
+                <RoleEditModal 
+                    user={user}
+                    onClose={() => setShowRoleEdit(false)}
+                    onSuccess={async () => { 
+                        const updatedUser = await storage.getUsers().then(users => users.find(u => u.id === user.id));
+                        await onUpdateUser(updatedUser);
+                        setShowRoleEdit(false); 
+                        setShowSuccess(true); 
+                        setTimeout(() => setShowSuccess(false), 3000); 
+                    }}
+                />
+            )}
+        </div>
     );
 }
 
