@@ -285,6 +285,62 @@ updateMatchVote: async (matchId, voterId, votes) => {
             }
         };
 
+// Controlla e aggiorna automaticamente lo status della partita
+checkAndUpdateMatchStatus: async (match) => {
+    if (!match) return match;
+    
+    const now = new Date();
+    const matchDate = new Date(match.date);
+    const votingDeadline = new Date(match.votingDeadline);
+    
+    let newStatus = match.status;
+    let needsUpdate = false;
+    
+    // OPEN → CLOSED: 30 minuti prima della partita
+    if (match.status === 'OPEN') {
+        const closingTime = new Date(matchDate.getTime() - 30 * 60 * 1000); // 30 min prima
+        if (now >= closingTime) {
+            newStatus = 'CLOSED';
+            needsUpdate = true;
+        }
+    }
+    
+    // CLOSED → VOTING: 3 ore dopo la partita (solo se ci sono squadre E risultato)
+    if (match.status === 'CLOSED') {
+        const votingOpenTime = new Date(matchDate.getTime() + 3 * 60 * 60 * 1000); // 3 ore dopo
+        const hasTeams = match.teams && 
+                        match.teams.gialli && 
+                        match.teams.gialli.length > 0 && 
+                        match.teams.verdi && 
+                        match.teams.verdi.length > 0;
+        const hasScore = match.score && 
+                        match.score.gialli !== null && 
+                        match.score.verdi !== null;
+        
+        if (now >= votingOpenTime && hasTeams && hasScore) {
+            newStatus = 'VOTING';
+            needsUpdate = true;
+        }
+    }
+    
+    // VOTING → COMPLETED: 5 giorni dopo apertura voti
+    if (match.status === 'VOTING') {
+        if (now >= votingDeadline) {
+            newStatus = 'COMPLETED';
+            needsUpdate = true;
+        }
+    }
+    
+    // Aggiorna se necessario
+    if (needsUpdate) {
+        await db.collection('matches').doc(match.id).update({ status: newStatus });
+        return { ...match, status: newStatus };
+    }
+    
+    return match;
+}
+
+		
         const utils = {
 calculateAverages: (playerId, votes, player) => {
     const playerVotes = votes.filter(v => v.playerId === playerId);
@@ -747,16 +803,22 @@ function MatchesPage({ currentUser, users, onSelectMatch }) {
         loadMatches();
     }, []);
 
-    const loadMatches = async () => {
-        setLoading(true);
-        try {
-            const data = await storage.getMatches();
-            setMatches(data);
-        } catch (error) {
-            console.error('Errore caricamento partite:', error);
-        }
-        setLoading(false);
-    };
+const loadMatches = async () => {
+    setLoading(true);
+    try {
+        const data = await storage.getMatches();
+        
+        // Controlla e aggiorna status automaticamente
+        const updatedMatches = await Promise.all(
+            data.map(match => storage.checkAndUpdateMatchStatus(match))
+        );
+        
+        setMatches(updatedMatches);
+    } catch (error) {
+        console.error('Errore caricamento partite:', error);
+    }
+    setLoading(false);
+};
 
     return (
         <div className="section-container">
@@ -1344,16 +1406,20 @@ function MatchDetailRouter({ matchId, currentUser, onBack }) {
         }
     };
 
-    const loadMatch = async () => {
-        setLoading(true);
-        try {
-            const data = await storage.getMatch(matchId);
-            setMatch(data);
-        } catch (error) {
-            console.error('Errore caricamento partita:', error);
-        }
-        setLoading(false);
-    };
+const loadMatch = async () => {
+    setLoading(true);
+    try {
+        let data = await storage.getMatch(matchId);
+        
+        // Controlla e aggiorna status automaticamente
+        data = await storage.checkAndUpdateMatchStatus(data);
+        
+        setMatch(data);
+    } catch (error) {
+        console.error('Errore caricamento partita:', error);
+    }
+    setLoading(false);
+};
 
     if (loading) {
         return (
@@ -1893,22 +1959,28 @@ function AdminPage({ users, setUsers, votes, setVotes }) {
         loadAdminMatches();
     }, []);
 
-    const loadAdminMatches = async () => {
-        try {
-            const matches = await storage.getMatches();
-            setAdminMatches(matches);
-            
-            // Carica iscrizioni per ogni partita
-            const regsMap = {};
-            for (const match of matches) {
-                const regs = await storage.getRegistrations(match.id);
-                regsMap[match.id] = regs;
-            }
-            setAdminRegistrations(regsMap);
-        } catch (error) {
-            console.error('Errore caricamento partite admin:', error);
+const loadAdminMatches = async () => {
+    try {
+        const matches = await storage.getMatches();
+        
+        // Controlla e aggiorna status automaticamente
+        const updatedMatches = await Promise.all(
+            matches.map(match => storage.checkAndUpdateMatchStatus(match))
+        );
+        
+        setAdminMatches(updatedMatches);
+        
+        // Carica iscrizioni per ogni partita
+        const regsMap = {};
+        for (const match of updatedMatches) {
+            const regs = await storage.getRegistrations(match.id);
+            regsMap[match.id] = regs;
         }
-    };
+        setAdminRegistrations(regsMap);
+    } catch (error) {
+        console.error('Errore caricamento partite admin:', error);
+    }
+};
 
     const handleCreateMatch = async () => {
         if (!newMatchDate || !newMatchTime || !newMatchLocation) {
