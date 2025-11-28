@@ -277,13 +277,7 @@ updateMatchVote: async (matchId, voterId, votes) => {
         votes,
         lastModifiedAt: Date.now()
     });
-},			
-            getCurrentUser: () => JSON.parse(localStorage.getItem('calcetto_current_user') || 'null'),
-            setCurrentUser: (user) => localStorage.setItem('calcetto_current_user', JSON.stringify(user)),
-            clearAll: () => {
-                localStorage.removeItem('calcetto_current_user');
-            }
-        };
+},  // 👈 VIRGOLA qui
 
 // Controlla e aggiorna automaticamente lo status della partita
 checkAndUpdateMatchStatus: async (match) => {
@@ -338,11 +332,13 @@ checkAndUpdateMatchStatus: async (match) => {
     }
     
     return match;
-}
+}  // 👈 NO virgola (ultima funzione di storage)
+};  // 👈 Chiude oggetto storage
+
 
 		
-        const utils = {
-calculateAverages: (playerId, votes, player) => {
+	const utils = {
+		calculateAverages: (playerId, votes, player) => {
     const playerVotes = votes.filter(v => v.playerId === playerId);
     if (playerVotes.length === 0) return null;
     const averages = {};
