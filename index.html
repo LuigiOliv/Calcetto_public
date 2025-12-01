@@ -1150,7 +1150,7 @@ function MatchRegistrationView({ match, currentUser, users, onBack, onUpdate }) 
 // VISTA VOTAZIONI PARTITA
 // ============================================================================
 
-function MatchVotingView({ match, currentUser, onBack }) {
+function MatchVotingView({ match, currentUser, users, onBack }) {
     const [votes, setVotes] = React.useState({});
     const [hasVoted, setHasVoted] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
@@ -1177,20 +1177,23 @@ function MatchVotingView({ match, currentUser, onBack }) {
 
     // Determina il team dell'utente
     const getUserTeam = () => {
-        if (match.teams.gialli.includes(currentUser.id)) return 'gialli';
-        if (match.teams.verdi.includes(currentUser.id)) return 'verdi';
+        const gialliIds = match.teams.gialli.map(p => p.playerId);
+        const verdiIds = match.teams.verdi.map(p => p.playerId);
+        if (gialliIds.includes(currentUser.id)) return 'gialli';
+        if (verdiIds.includes(currentUser.id)) return 'verdi';
         return null;
     };
 
     // Ottieni lista giocatori da votare (tutti tranne me stesso)
     const getPlayersToVote = () => {
         const allPlayers = [...match.teams.gialli, ...match.teams.verdi];
-        return allPlayers.filter(playerId => playerId !== currentUser.id);
+        return allPlayers.filter(p => p.playerId !== currentUser.id);
     };
 
     // Ottieni team di un giocatore
-    const getPlayerTeam = (playerId) => {
-        if (match.teams.gialli.includes(playerId)) return 'gialli';
+    const getPlayerTeam = (player) => {
+        const gialliIds = match.teams.gialli.map(p => p.playerId);
+        if (gialliIds.includes(player.playerId)) return 'gialli';
         return 'verdi';
     };
 
@@ -1274,22 +1277,23 @@ function MatchVotingView({ match, currentUser, onBack }) {
                             {/* SQUADRA GIALLI */}
                             <div className="team-voting-section">
                                 <h3 className="team-section-title gialli">🟡 GIALLI</h3>
-                                {gialliToVote.map(playerId => (
-                                    <div key={playerId} className="vote-row">
+                                {gialliToVote.map(player => (
+                                    <div key={player.playerId} className="vote-row">
                                         <div className="vote-row-name">
-                                            {utils.getPlayerNameById(playerId, [])}
+                                            {player.playerName}
+                                            {player.isGoalkeeper && ' 🧤'}
                                         </div>
                                         <input
                                             type="range"
                                             min="1"
                                             max="10"
                                             step="0.5"
-                                            value={votes[playerId] || 5}
-                                            onChange={(e) => handleVoteChange(playerId, e.target.value)}
+                                            value={votes[player.playerId] || 5}
+                                            onChange={(e) => handleVoteChange(player.playerId, e.target.value)}
                                             className="vote-slider"
                                         />
                                         <div className="vote-value">
-                                            {votes[playerId] ? votes[playerId].toFixed(1) : '5.0'}
+                                            {votes[player.playerId] ? votes[player.playerId].toFixed(1) : '5.0'}
                                         </div>
                                     </div>
                                 ))}
@@ -1298,22 +1302,23 @@ function MatchVotingView({ match, currentUser, onBack }) {
                             {/* SQUADRA VERDI */}
                             <div className="team-voting-section">
                                 <h3 className="team-section-title verdi">🟢 VERDI</h3>
-                                {verdiToVote.map(playerId => (
-                                    <div key={playerId} className="vote-row">
+                                {verdiToVote.map(player => (
+                                    <div key={player.playerId} className="vote-row">
                                         <div className="vote-row-name">
-                                            {utils.getPlayerNameById(playerId, [])}
+                                            {player.playerName}
+                                            {player.isGoalkeeper && ' 🧤'}
                                         </div>
                                         <input
                                             type="range"
                                             min="1"
                                             max="10"
                                             step="0.5"
-                                            value={votes[playerId] || 5}
-                                            onChange={(e) => handleVoteChange(playerId, e.target.value)}
+                                            value={votes[player.playerId] || 5}
+                                            onChange={(e) => handleVoteChange(player.playerId, e.target.value)}
                                             className="vote-slider"
                                         />
                                         <div className="vote-value">
-                                            {votes[playerId] ? votes[playerId].toFixed(1) : '5.0'}
+                                            {votes[player.playerId] ? votes[player.playerId].toFixed(1) : '5.0'}
                                         </div>
                                     </div>
                                 ))}
@@ -1326,13 +1331,14 @@ function MatchVotingView({ match, currentUser, onBack }) {
                             {/* VOTI GIÀ INVIATI */}
                             <div className="team-voting-section">
                                 <h3 className="team-section-title gialli">🟡 GIALLI</h3>
-                                {gialliToVote.map(playerId => (
-                                    <div key={playerId} className="vote-row readonly">
+                                {gialliToVote.map(player => (
+                                    <div key={player.playerId} className="vote-row readonly">
                                         <div className="vote-row-name">
-                                            {utils.getPlayerNameById(playerId, [])}
+                                            {player.playerName}
+                                            {player.isGoalkeeper && ' 🧤'}
                                         </div>
                                         <div className="vote-readonly-value">
-                                            {votes[playerId] ? votes[playerId].toFixed(1) : '-'}
+                                            {votes[player.playerId] ? votes[player.playerId].toFixed(1) : '-'}
                                         </div>
                                     </div>
                                 ))}
@@ -1340,13 +1346,14 @@ function MatchVotingView({ match, currentUser, onBack }) {
 
                             <div className="team-voting-section">
                                 <h3 className="team-section-title verdi">🟢 VERDI</h3>
-                                {verdiToVote.map(playerId => (
-                                    <div key={playerId} className="vote-row readonly">
+                                {verdiToVote.map(player => (
+                                    <div key={player.playerId} className="vote-row readonly">
                                         <div className="vote-row-name">
-                                            {utils.getPlayerNameById(playerId, [])}
+                                            {player.playerName}
+                                            {player.isGoalkeeper && ' 🧤'}
                                         </div>
                                         <div className="vote-readonly-value">
-                                            {votes[playerId] ? votes[playerId].toFixed(1) : '-'}
+                                            {votes[player.playerId] ? votes[player.playerId].toFixed(1) : '-'}
                                         </div>
                                     </div>
                                 ))}
@@ -1471,7 +1478,8 @@ if (match.status === 'VOTING') {
     return (
         <MatchVotingView 
             match={match} 
-            currentUser={currentUser} 
+            currentUser={currentUser}
+            users={users}
             onBack={onBack}
         />
     );
