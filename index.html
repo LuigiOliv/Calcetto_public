@@ -307,18 +307,18 @@ const getShortSkillsForPlayer = (player) => {
                 let newStatus = match.status;
                 let needsUpdate = false;
                 
-                // OPEN → CLOSED: 30 minuti prima della partita
+                // OPEN → CLOSED: 50 minuti prima della partita
                 if (match.status === 'OPEN') {
-                    const closingTime = new Date(matchDate.getTime() - 30 * 60 * 1000); // 30 min prima
+                    const closingTime = new Date(matchDate.getTime() - 50 * 60 * 1000); // 30 min prima
                     if (now >= closingTime) {
                         newStatus = 'CLOSED';
                         needsUpdate = true;
                     }
                 }
                 
-                // CLOSED → VOTING: 3 ore dopo la partita (solo se ci sono squadre E risultato)
+                // CLOSED → VOTING: 2 ore dopo la partita (solo se ci sono squadre E risultato)
                 if (match.status === 'CLOSED') {
-                    const votingOpenTime = new Date(matchDate.getTime() + 3 * 60 * 60 * 1000); // 3 ore dopo
+                    const votingOpenTime = new Date(matchDate.getTime() + 2 * 60 * 60 * 1000); // 2 ore dopo
                     const hasTeams = match.teams && 
                                     match.teams.gialli && 
                                     match.teams.gialli.length > 0 && 
@@ -334,7 +334,7 @@ const getShortSkillsForPlayer = (player) => {
                     }
                 }
                 
-                // VOTING → COMPLETED: 5 giorni dopo apertura voti
+                // VOTING → COMPLETED: quando passa la deadline (6 giorni dopo partita)
                 if (match.status === 'VOTING') {
                     if (now >= votingDeadline) {
                         newStatus = 'COMPLETED';
@@ -2200,19 +2200,19 @@ const loadAdminMatches = async () => {
             // Costruisci data completa
             const matchDateTime = new Date(`${newMatchDate}T${newMatchTime}:00`);
             
-            // Deadline display: 4 giorni prima alle 20:00
+            // Deadline display: 3 giorni prima alle 18:00
             const regDeadlineDisplay = new Date(matchDateTime);
-            regDeadlineDisplay.setDate(regDeadlineDisplay.getDate() - 4);
-            regDeadlineDisplay.setHours(20, 0, 0, 0);
+            regDeadlineDisplay.setDate(regDeadlineDisplay.getDate() - 3);
+            regDeadlineDisplay.setHours(18, 0, 0, 0);
             
             // Deadline forzata: 50 minuti prima della partita
             const regDeadlineForced = new Date(matchDateTime);
             regDeadlineForced.setMinutes(regDeadlineForced.getMinutes() - 50);
             
-            // Deadline voti: 3 giorni dopo alle 24:00
+            // Deadline voti: 3 giorni dopo a mezzanotte
             const votingDeadline = new Date(matchDateTime);
             votingDeadline.setDate(votingDeadline.getDate() + 3);
-            votingDeadline.setHours(24, 0, 0, 0);
+            votingDeadline.setHours(23, 59, 59, 999);
 
             await storage.createMatch({
                 date: matchDateTime.toISOString(),
