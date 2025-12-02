@@ -191,110 +191,135 @@ const getShortSkillsForPlayer = (player) => {
                 await db.collection('matches').doc(matchId).update(updates);
             },
 
-            // Cancella partita + tutte le iscrizioni e voti collegati (SOLO ADMIN)
-            deleteMatch: async (matchId) => {
-                const batch = db.batch();
-                
-                // Cancella registrations
-                const regs = await db.collection('registrations').where('matchId', '==', matchId).get();
-                regs.forEach(doc => batch.delete(doc.ref));
-                
-                // Cancella match_votes
-                const votes = await db.collection('match_votes').where('matchId', '==', matchId).get();
-                votes.forEach(doc => batch.delete(doc.ref));
-                
-                // Cancella match
-                batch.delete(db.collection('matches').doc(matchId));
-                
-                await batch.commit();
-            },
+// ✅ MODIFICATA: Cancella partita + sotto-collezioni automaticamente
+    deleteMatch: async (matchId) => {
+        const batch = db.batch();
+        
+        // Cancella registrations (sotto-collezione)
+        const regs = await db.collection('matches')
+            .doc(matchId)
+            .collection('registrations')
+            .get();
+        regs.forEach(doc => batch.delete(doc.ref));
+        
+        // Cancella match_votes (sotto-collezione)
+        const votes = await db.collection('matches')
+            .doc(matchId)
+            .collection('match_votes')
+            .get();
+        votes.forEach(doc => batch.delete(doc.ref));
+        
+        // Cancella match
+        batch.delete(db.collection('matches').doc(matchId));
+        
+        await batch.commit();
+    },
 
             // ============================================================================
             // FUNZIONI REGISTRATIONS
             // ============================================================================
             
-            // Ottiene tutte le iscrizioni per una partita
-            getRegistrations: async (matchId) => {
-                const snapshot = await db.collection('registrations')
-                    .where('matchId', '==', matchId)
-                    .get();
-                const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Ordina lato client per evitare indice composito
-                return registrations.sort((a, b) => a.registeredAt - b.registeredAt);
-            },
+    // ✅ MODIFICATA: Ottiene tutte le iscrizioni per una partita
+    getRegistrations: async (matchId) => {
+        const snapshot = await db.collection('matches')
+            .doc(matchId)
+            .collection('registrations')
+            .get();
+        const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Ordina lato client per evitare indice composito
+        return registrations.sort((a, b) => a.registeredAt - b.registeredAt);
+    },
 
-            // Iscrive un giocatore
-            registerPlayer: async (matchId, player) => {
-                const regId = `reg_${matchId}_${player.id}`;
-                await db.collection('registrations').doc(regId).set({
-                    matchId,
-                    playerId: player.id,
-                    playerName: player.name,
-                    isGoalkeeper: player.isGoalkeeper || false,
-                    registeredAt: Date.now(),
-                    registeredBy: player.id
-                });
-            },
+    // ✅ MODIFICATA: Iscrive un giocatore
+    registerPlayer: async (matchId, player) => {
+        await db.collection('matches')
+            .doc(matchId)
+            .collection('registrations')
+            .doc(player.id)  // userId come document ID
+            .set({
+                playerId: player.id,
+                playerName: player.name,
+                isGoalkeeper: player.isGoalkeeper || false,
+                registeredAt: Date.now(),
+                registeredBy: player.id
+            });
+        // Nota: matchId non serve più nei dati, è già nel path!
+    },
 
-            // Admin iscrive un altro giocatore
-            registerPlayerByAdmin: async (matchId, player, adminId) => {
-                const regId = `reg_${matchId}_${player.id}`;
-                await db.collection('registrations').doc(regId).set({
-                    matchId,
-                    playerId: player.id,
-                    playerName: player.name,
-                    isGoalkeeper: player.isGoalkeeper || false,
-                    registeredAt: Date.now(),
-                    registeredBy: adminId
-                });
-            },
+    // ✅ MODIFICATA: Admin iscrive un altro giocatore
+    registerPlayerByAdmin: async (matchId, player, adminId) => {
+        await db.collection('matches')
+            .doc(matchId)
+            .collection('registrations')
+            .doc(player.id)  // userId come document ID
+            .set({
+                playerId: player.id,
+                playerName: player.name,
+                isGoalkeeper: player.isGoalkeeper || false,
+                registeredAt: Date.now(),
+                registeredBy: adminId
+            });
+    },
 
-            // Disiscrivi giocatore (se stesso o admin)
-            unregisterPlayer: async (matchId, playerId) => {
-                const regId = `reg_${matchId}_${playerId}`;
-                await db.collection('registrations').doc(regId).delete();
-            },
+    // ✅ MODIFICATA: Disiscrivi giocatore
+    unregisterPlayer: async (matchId, playerId) => {
+        await db.collection('matches')
+            .doc(matchId)
+            .collection('registrations')
+            .doc(playerId)
+            .delete();
+    },
 
             // ============================================================================
             // FUNZIONI MATCH_VOTES
             // ============================================================================
 
-            // Ottiene tutti i voti per una partita
-            getMatchVotes: async (matchId) => {
-                const snapshot = await db.collection('match_votes')
-                    .where('matchId', '==', matchId)
-                    .get();
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            },
+    // ✅ MODIFICATA: Ottiene tutti i voti per una partita
+    getMatchVotes: async (matchId) => {
+        const snapshot = await db.collection('matches')
+            .doc(matchId)
+            .collection('match_votes')
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    },
 
-            // Ottiene il voto di un giocatore specifico
-            getMyMatchVote: async (matchId, voterId) => {
-                const voteId = `mvote_${matchId}_${voterId}`;
-                const doc = await db.collection('match_votes').doc(voteId).get();
-                return doc.exists ? { id: doc.id, ...doc.data() } : null;
-            },
+    // ✅ MODIFICATA: Ottiene il voto di un giocatore specifico
+    getMyMatchVote: async (matchId, voterId) => {
+        const doc = await db.collection('matches')
+            .doc(matchId)
+            .collection('match_votes')
+            .doc(voterId)  // voterId come document ID
+            .get();
+        return doc.exists ? { id: doc.id, ...doc.data() } : null;
+    },
 
-            // Salva nuovo voto
-            saveMatchVote: async (matchId, voterId, voterTeam, votes) => {
-                const voteId = `mvote_${matchId}_${voterId}`;
-                await db.collection('match_votes').doc(voteId).set({
-                    matchId,
-                    voterId,
-                    voterTeam,
-                    votes,
-                    submittedAt: Date.now(),
-                    lastModifiedAt: Date.now()
-                });
-            },
+    // ✅ MODIFICATA: Salva nuovo voto
+    saveMatchVote: async (matchId, voterId, voterTeam, votes) => {
+        await db.collection('matches')
+            .doc(matchId)
+            .collection('match_votes')
+            .doc(voterId)  // voterId come document ID
+            .set({
+                voterId,
+                voterTeam,
+                votes,
+                submittedAt: Date.now(),
+                lastModifiedAt: Date.now()
+            });
+        // Nota: matchId non serve più nei dati!
+    },
 
-            // Modifica voto esistente
-            updateMatchVote: async (matchId, voterId, votes) => {
-                const voteId = `mvote_${matchId}_${voterId}`;
-                await db.collection('match_votes').doc(voteId).update({
-                    votes,
-                    lastModifiedAt: Date.now()
-                });
-            },
+    // ✅ MODIFICATA: Modifica voto esistente
+    updateMatchVote: async (matchId, voterId, votes) => {
+        await db.collection('matches')
+            .doc(matchId)
+            .collection('match_votes')
+            .doc(voterId)
+            .update({
+                votes,
+                lastModifiedAt: Date.now()
+            });
+    },
 
             // Controlla e aggiorna automaticamente lo status della partita
             checkAndUpdateMatchStatus: async (match) => {
