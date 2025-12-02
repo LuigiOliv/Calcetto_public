@@ -1548,13 +1548,13 @@ function MatchVotingView({ match, currentUser, users, onBack }) {
 
                             {canModify && (
                                 <div className="deadline-msg">
-                                    Puoi modificare fino a {utils.formatDeadlineDisplay(match.votingDeadline)}, 24:00
+                                    Puoi modificare fino a prima di {utils.formatDeadlineDisplay(match.votingDeadline)}.
                                 </div>
                             )}
 
                             {isLocked && (
                                 <div className="deadline-msg closed">
-                                    Le votazioni si sono chiuse {utils.formatDeadlineDisplay(match.votingDeadline)}, 24:00
+                                    Le votazioni sono chiuse! 
                                 </div>
                             )}
                         </>
