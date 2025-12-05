@@ -324,7 +324,21 @@ const getShortSkillsForPlayer = (player) => {
             // Controlla e aggiorna automaticamente lo status della partita
             checkAndUpdateMatchStatus: async (match) => {
                 if (!match) return match;
-                
+                // 👇 AGGIUNTO: Rispetta override manuale admin
+    if (match.manualOverride && match.manualOverrideUntil) {
+        if (Date.now() < match.manualOverrideUntil) {
+            console.log(`🛡️ Manual override attivo fino a ${new Date(match.manualOverrideUntil).toLocaleString()}`);
+            console.log(`🛡️ Salto auto-update per match ${match.id}`);
+            return match;
+        } else {
+            console.log(`⏰ Manual override scaduto, rimuovo flag`);
+            await db.collection('matches').doc(match.id).update({ 
+                manualOverride: false,
+                manualOverrideUntil: null
+            });
+        }
+    }
+    // 👆 FINE AGGIUNTA
                 const now = new Date();
                 const matchDate = new Date(match.date);
                 const votingDeadline = new Date(match.votingDeadline);
@@ -2518,11 +2532,15 @@ const loadAdminMatches = async () => {
         }
     };
 
-    const handleCloseRegistrations = async (matchId) => {
-        if (!confirm('Chiudere le iscrizioni per questa partita?')) return;
-        
-        try {
-            await storage.updateMatch(matchId, { status: 'CLOSED' });
+const handleCloseRegistrations = async (matchId) => {
+    if (!confirm('Chiudere le iscrizioni? I giocatori non potranno più iscriversi.')) return;
+    
+    try {
+        await storage.updateMatch(matchId, { 
+            status: 'CLOSED',
+            manualOverride: false,  // 👈 AGGIUNTO: reset override
+            manualOverrideUntil: null
+        });
             showSuccessMsg('Iscrizioni chiuse!');
             await loadAdminMatches();
         } catch (error) {
