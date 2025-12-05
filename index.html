@@ -2540,22 +2540,38 @@ const loadAdminMatches = async () => {
     let resetData = {};
     
     if (match.status === 'CLOSED') {
-        confirmMessage = 'Riaprire le iscrizioni? Le squadre NON verranno cancellate.';
-        resetData = { status: 'OPEN' };
-    } else if (match.status === 'VOTING') {
-        confirmMessage = '⚠️ Tornare alle iscrizioni? Le squadre e i voti verranno cancellati!';
-        resetData = { 
-            status: 'OPEN',
-            teams: { gialli: [], verdi: [] }
-        };
-    } else if (match.status === 'COMPLETED') {
-        confirmMessage = '⚠️ Riaprire la partita? Risultato e voti verranno cancellati!';
-        resetData = { 
-            status: 'OPEN',
-            teams: { gialli: [], verdi: [] },
-            score: { gialli: 0, verdi: 0 }
-        };
-    }
+    console.log('🟡 Caso rilevato: CLOSED');
+    confirmMessage = 'Riaprire le iscrizioni? Le squadre NON verranno cancellate.';
+    resetData = { 
+        status: 'OPEN',
+        manualOverride: true,  // 👈 AGGIUNTO
+        manualOverrideUntil: Date.now() + (2 * 60 * 60 * 1000)  // 2 ore di protezione
+    };
+} else if (match.status === 'VOTING') {
+    console.log('🟡 Caso rilevato: VOTING');
+    confirmMessage = '⚠️ Tornare alle iscrizioni? ATTENZIONE: Le squadre e i voti verranno cancellati!';
+    resetData = { 
+        status: 'OPEN',
+        teams: { gialli: [], verdi: [] },
+        score: null,
+        topScorer: null,
+        topScorerGoals: null,
+        manualOverride: true,  // 👈 AGGIUNTO
+        manualOverrideUntil: Date.now() + (2 * 60 * 60 * 1000)
+    };
+} else if (match.status === 'COMPLETED') {
+    console.log('🟡 Caso rilevato: COMPLETED');
+    confirmMessage = '⚠️ Riaprire la partita? ATTENZIONE: Risultato e voti verranno cancellati!';
+    resetData = { 
+        status: 'OPEN',
+        teams: { gialli: [], verdi: [] },
+        score: { gialli: 0, verdi: 0 },
+        topScorer: null,
+        topScorerGoals: null,
+        manualOverride: true,  // 👈 AGGIUNTO
+        manualOverrideUntil: Date.now() + (2 * 60 * 60 * 1000)
+    };
+}
     
     if (!confirm(confirmMessage)) return;
     
