@@ -3062,93 +3062,7 @@ const averages = utils.calculateAverages(player.id, votes, player);
 
             {showSuccess && <div className="success-message">✓ {successMessage}</div>}
 
-            <div className="settings-group">
-    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-        <h3 style={{cursor: 'pointer', userSelect: 'none'}} onClick={() => setShowPlayersList(!showPlayersList)}>
-            {showPlayersList ? '▼' : '▶'} 👥 Gestione Giocatori ({users.filter(u => !u.id.startsWith('seed')).length})
-        </h3>
-        <div style={{display: 'flex', gap: '10px'}}>
-            {showPlayersList && <button className="btn btn-primary" onClick={handleAddPlayer}>+ Aggiungi</button>}
-            <button className="btn btn-secondary" onClick={() => setShowPlayersList(!showPlayersList)}>
-                {showPlayersList ? 'Comprimi' : 'Espandi'}
-            </button>
-        </div>
-    </div>
-    
-    {showPlayersList && (
-        <div className="admin-player-list">
-                    {users.filter(u => !u.id.startsWith('seed')).map((player, index) => {
-                        const voteCount = utils.countVotes(player.id, votes);
-                        const averages = utils.calculateAverages(player.id, votes);
-                        const overall = utils.calculateOverall(averages);
-                        
-                        return (
-                            <div key={player.id} className="admin-player-item">
-                                <span style={{color: '#a0aec0', width: '25px'}}>{index + 1}.</span>
-                                
-                                {editingPlayer === player.id ? (
-                                    <div style={{display: 'flex', gap: '10px', flex: 1}}>
-                                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="admin-input" autoFocus />
-                                        <button onClick={() => handleSaveName(player.id)} className="admin-btn btn-save">✓</button>
-                                        <button onClick={() => setEditingPlayer(null)} className="admin-btn btn-cancel">✕</button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <span style={{fontWeight: '600', minWidth: '140px'}}>{player.name}</span>
-                                        <span style={{color: '#718096', fontSize: '13px', flex: 1}}>{player.claimed ? `✓ ${player.email}` : '○ Non reclamato'}</span>
-                                        <span style={{color: '#667eea', fontSize: '13px'}}>OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)</span>
-                                        <div style={{display: 'flex', gap: '6px'}}>
-                                            <button onClick={() => handleEditName(player)} className="admin-btn">✏️</button>
-                                            <button onClick={() => handleEditVotes(player)} className="admin-btn btn-chart">📊</button>
-                                            <button onClick={() => handleDeletePlayer(player.id)} className="admin-btn btn-delete">🗑️</button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-    )}
-</div>
-            
-            <div className="settings-group">
-                <h3>💾 Backup Database</h3>
-                <p>Esporta o importa tutti i dati (utenti e voti) per fare backup o ripristinare</p>
-                <div style={{display: 'flex', gap: '15px', marginTop: '15px'}}>
-                    <button className="btn btn-primary" onClick={() => {
-                        const data = { users, votes, timestamp: Date.now(), date: new Date().toISOString() };
-                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `calcetto_backup_${new Date().toISOString().split('T')[0]}.json`;
-                        a.click();
-                        showSuccessMsg('Backup esportato!');
-                    }}>📥 Esporta Backup</button>
-                    <button className="btn btn-secondary" onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = '.json';
-                        input.onchange = async (e) => {
-                            try {
-                                const file = e.target.files[0];
-                                const text = await file.text();
-                                const data = JSON.parse(text);
-                                if (!confirm('⚠️ ATTENZIONE: Questo sovrascriverà tutti i dati attuali. Continuare?')) return;
-                                if (data.users) await storage.setUsers(data.users);
-                                if (data.votes) await storage.setVotes(data.votes);
-                                showSuccessMsg('Backup importato!');
-                                setTimeout(() => window.location.reload(), 1000);
-                            } catch (err) {
-                                alert('Errore durante l\'importazione: ' + err.message);
-                            }
-                        };
-                        input.click();
-                    }}>📤 Importa Backup</button>
-                </div>
-            </div>
-
-<div className="settings-group">
+			<div className="settings-group">
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
                     <h3>🏆 Gestione Partite</h3>
                     <button className="btn btn-primary" onClick={() => setShowCreateMatch(!showCreateMatch)}>
@@ -3363,7 +3277,92 @@ const averages = utils.calculateAverages(player.id, votes, player);
                 </div>
             </div>
 
-
+			
+            <div className="settings-group">
+    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+        <h3 style={{cursor: 'pointer', userSelect: 'none'}} onClick={() => setShowPlayersList(!showPlayersList)}>
+            {showPlayersList ? '▼' : '▶'} 👥 Gestione Giocatori ({users.filter(u => !u.id.startsWith('seed')).length})
+        </h3>
+        <div style={{display: 'flex', gap: '10px'}}>
+            {showPlayersList && <button className="btn btn-primary" onClick={handleAddPlayer}>+ Aggiungi</button>}
+            <button className="btn btn-secondary" onClick={() => setShowPlayersList(!showPlayersList)}>
+                {showPlayersList ? 'Comprimi' : 'Espandi'}
+            </button>
+        </div>
+    </div>
+    
+    {showPlayersList && (
+        <div className="admin-player-list">
+                    {users.filter(u => !u.id.startsWith('seed')).map((player, index) => {
+                        const voteCount = utils.countVotes(player.id, votes);
+                        const averages = utils.calculateAverages(player.id, votes);
+                        const overall = utils.calculateOverall(averages);
+                        
+                        return (
+                            <div key={player.id} className="admin-player-item">
+                                <span style={{color: '#a0aec0', width: '25px'}}>{index + 1}.</span>
+                                
+                                {editingPlayer === player.id ? (
+                                    <div style={{display: 'flex', gap: '10px', flex: 1}}>
+                                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="admin-input" autoFocus />
+                                        <button onClick={() => handleSaveName(player.id)} className="admin-btn btn-save">✓</button>
+                                        <button onClick={() => setEditingPlayer(null)} className="admin-btn btn-cancel">✕</button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span style={{fontWeight: '600', minWidth: '140px'}}>{player.name}</span>
+                                        <span style={{color: '#718096', fontSize: '13px', flex: 1}}>{player.claimed ? `✓ ${player.email}` : '○ Non reclamato'}</span>
+                                        <span style={{color: '#667eea', fontSize: '13px'}}>OVR: {overall ? utils.toBase10(overall).toFixed(2) : '-'} ({voteCount} voti)</span>
+                                        <div style={{display: 'flex', gap: '6px'}}>
+                                            <button onClick={() => handleEditName(player)} className="admin-btn">✏️</button>
+                                            <button onClick={() => handleEditVotes(player)} className="admin-btn btn-chart">📊</button>
+                                            <button onClick={() => handleDeletePlayer(player.id)} className="admin-btn btn-delete">🗑️</button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+    )}
+</div>
+            
+            <div className="settings-group">
+                <h3>💾 Backup Database</h3>
+                <p>Esporta o importa tutti i dati (utenti e voti) per fare backup o ripristinare</p>
+                <div style={{display: 'flex', gap: '15px', marginTop: '15px'}}>
+                    <button className="btn btn-primary" onClick={() => {
+                        const data = { users, votes, timestamp: Date.now(), date: new Date().toISOString() };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `calcetto_backup_${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                        showSuccessMsg('Backup esportato!');
+                    }}>📥 Esporta Backup</button>
+                    <button className="btn btn-secondary" onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        input.onchange = async (e) => {
+                            try {
+                                const file = e.target.files[0];
+                                const text = await file.text();
+                                const data = JSON.parse(text);
+                                if (!confirm('⚠️ ATTENZIONE: Questo sovrascriverà tutti i dati attuali. Continuare?')) return;
+                                if (data.users) await storage.setUsers(data.users);
+                                if (data.votes) await storage.setVotes(data.votes);
+                                showSuccessMsg('Backup importato!');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } catch (err) {
+                                alert('Errore durante l\'importazione: ' + err.message);
+                            }
+                        };
+                        input.click();
+                    }}>📤 Importa Backup</button>
+                </div>
+            </div>
 
 
 			
