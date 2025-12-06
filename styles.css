@@ -709,28 +709,34 @@ p {
 /* Badge status */
 .match-status {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-family: 'Teko', sans-serif;
+    border: 2px solid transparent;
 }
 
 .match-status.open {
-    background: rgba(210, 248, 0, 0.2);
+    background: rgba(210, 248, 0, 0.15);
     color: var(--volt);
+    border-color: var(--volt);
 }
 
 .match-status.voting {
-    background: rgba(0, 240, 255, 0.2);
+    background: rgba(0, 240, 255, 0.15);
     color: var(--electric-blue);
+    border-color: var(--electric-blue);
 }
 
 .match-status.completed {
-    background: rgba(107, 114, 128, 0.2);
+    background: rgba(107, 114, 128, 0.15);
     color: #9CA3AF;
+    border-color: #6B7280;
 }
+
 
 /* ============================================================================
    DETTAGLIO PARTITA - ISCRIZIONI
@@ -3769,40 +3775,58 @@ p {
 .admin-match-item {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 4px solid var(--volt);
     border-radius: 4px;
-    padding: 15px;
-    transition: all 0.2s ease;
+    padding: 20px;
+    transition: all 0.3s ease;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .admin-match-item:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(210, 248, 0, 0.3);
+    border-left-color: var(--electric-blue);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
 }
 
 .admin-match-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 15px;
+    margin-bottom: 15px;
     flex-wrap: wrap;
 }
 
 .admin-match-date {
     font-family: 'Teko', sans-serif;
-    font-size: 1.3rem;
-    color: white;
+    font-size: 1.6rem;
+    color: var(--volt);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(210, 248, 0, 0.3);
 }
 
 .admin-match-info {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-bottom: 15px;
-    font-size: 0.9rem;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
     color: var(--text-muted);
+    padding-left: 5px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
 }
+
+.admin-match-info > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 
 .admin-match-actions {
     display: flex;
@@ -5885,71 +5909,88 @@ canvas.chart-canvas {
    ADMIN ACTION BUTTONS - GESTIONE PARTITE
    ============================================================================ */
 .admin-action-btn {
-    padding: 8px 16px;
+    padding: 10px 18px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 0.85rem;
     font-weight: 600;
     transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: 'Roboto', sans-serif;
 }
 
+/* 🔒 CHIUDI ISCRIZIONI - VOLT giallo */
 .admin-action-btn.close {
-    background: #f59e0b;
-    color: white;
+    background: rgba(210, 248, 0, 0.15);
+    border: 1px solid var(--volt);
+    color: var(--volt);
 }
 
 .admin-action-btn.close:hover {
-    background: #d97706;
+    background: var(--volt);
+    color: black;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 12px rgba(210, 248, 0, 0.3);
 }
 
+/* 👥 ASSEGNA SQUADRE - ELECTRIC-BLUE ciano */
 .admin-action-btn.assign {
-    background: #667eea;
-    color: white;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid var(--electric-blue);
+    color: var(--electric-blue);
 }
 
 .admin-action-btn.assign:hover {
-    background: #5a67d8;
+    background: var(--electric-blue);
+    color: black;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.3);
 }
 
+/* ⚽ INSERISCI RISULTATO - Verde elegante */
 .admin-action-btn.score {
-    background: #48bb78;
-    color: white;
+    background: rgba(72, 187, 120, 0.15);
+    border: 1px solid #48bb78;
+    color: #48bb78;
 }
 
 .admin-action-btn.score:hover {
-    background: #38a169;
+    background: #48bb78;
+    color: white;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
 }
 
+/* 🗑️ ELIMINA - HOT-RED rosso */
 .admin-action-btn.delete {
-    background: var(--hot-red);
-    color: white;
+    background: rgba(255, 46, 99, 0.15);
+    border: 1px solid var(--hot-red);
+    color: var(--hot-red);
 }
 
 .admin-action-btn.delete:hover {
-    background: #c81e4d;
+    background: var(--hot-red);
+    color: white;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
 }
 
+/* 🔓 RIAPRI/TORNA - ELECTRIC-BLUE ciano */
 .admin-action-btn.reopen {
-    background: #667eea;
-    color: white;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid var(--electric-blue);
+    color: var(--electric-blue);
 }
 
 .admin-action-btn.reopen:hover {
-    background: #5a67d8;
+    background: var(--electric-blue);
+    color: black;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.3);
 }
+
 
 
 
@@ -6726,4 +6767,3 @@ canvas.chart-canvas {
         padding: 30px;
     }
 }
-
