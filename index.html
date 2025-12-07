@@ -2295,21 +2295,26 @@ function ClassifichePage({ users, votes, currentUser, onViewProfile }) {
     const [showAllOverall, setShowAllOverall] = useState(false);
     const [showAllMacro, setShowAllMacro] = useState({ tecniche: false, tattiche: false, fisiche: false });
 
+// Scroll to top quando cambia la vista
+useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}, [view, selectedMacro, selectedSkill]);
+	
     // Conta i voti fatti dall'utente corrente
     const userVotesCount = votes.filter(v => v.voterId === currentUser.id).length;
     const canViewLeaderboard = userVotesCount >= 5;
     
     // Calcola statistiche overall
-    const playersWithOverall = users
-        .filter(u => !u.id.startsWith('seed'))
-        .map(player => {
-            const averages = utils.calculateAverages(player.id, votes, player);
-            const overall = utils.calculateOverall(averages);
-            const voteCount = utils.countVotes(player.id, votes);
-            return { ...player, overall, voteCount, averages };
-        })
-        .filter(p => p.overall !== null)
-        .sort((a, b) => b.overall - a.overall);
+const playersWithOverall = users
+    .filter(u => !u.id.startsWith('seed'))
+    .map(player => {
+        const averages = utils.calculateAverages(player.id, votes, player);
+        const overall = utils.calculateOverall(averages);
+        const voteCount = utils.countVotes(player.id, votes);
+        return { ...player, overall, voteCount, averages };
+    })
+    .filter(p => p.overall !== null && p.voteCount >= 3)
+    .sort((a, b) => b.overall - a.overall);
 
     // Funzione per calcolare classifica per macrocategoria
     const getPlayersForMacro = (macroCategory) => {
@@ -2340,7 +2345,7 @@ function ClassifichePage({ users, votes, currentUser, onViewProfile }) {
                 
                 return { ...player, score: categoryAvg, voteCount };
             })
-            .filter(p => p.score !== null)
+            .filter(p => p.score !== null && p.voteCount >= 3)
             .sort((a, b) => b.score - a.score);
     };
 
@@ -2355,7 +2360,7 @@ function ClassifichePage({ users, votes, currentUser, onViewProfile }) {
                 
                 return { ...player, score, voteCount };
             })
-            .filter(p => p.score !== undefined)
+            .filter(p => p.score !== undefined && p.voteCount >= 3)
             .sort((a, b) => b.score - a.score);
     };
 
