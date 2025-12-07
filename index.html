@@ -2644,8 +2644,7 @@ function ClassifichePage({ users, votes, currentUser, onViewProfile }) {
             <h3 className="rankings-section-title" style={{marginTop: '40px'}}>⚡ Top 3 per ogni Skill</h3>
             
             <div className="rankings-skills-grid">
-                {/* TECNICHE */}
-                {Object.keys(SKILLS).map(category => 
+                {Object.keys(SKILLS).flatMap(category => 
                     SKILLS[category].map((skill, idx) => {
                         const playersForSkill = getPlayersForSkill(skill);
                         const skillEmojis = {
