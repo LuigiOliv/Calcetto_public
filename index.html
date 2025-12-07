@@ -2319,9 +2319,19 @@ function ClassifichePage({ users, votes, currentUser, onViewProfile }) {
                 const averages = utils.calculateAverages(player.id, votes, player);
                 const voteCount = utils.countVotes(player.id, votes);
                 
+                // Controllo null-safety
+                if (!averages) {
+                    return { ...player, score: null, voteCount };
+                }
+                
                 const skillsForCategory = player.isGoalkeeper 
                     ? SKILLS_GOALKEEPER[macroCategory]
                     : SKILLS[macroCategory];
+                
+                // Controllo che skillsForCategory esista
+                if (!skillsForCategory) {
+                    return { ...player, score: null, voteCount };
+                }
                 
                 const categoryVotes = skillsForCategory.map(skill => averages[skill]).filter(v => v !== undefined);
                 const categoryAvg = categoryVotes.length > 0 
@@ -2341,7 +2351,7 @@ function ClassifichePage({ users, votes, currentUser, onViewProfile }) {
             .map(player => {
                 const averages = utils.calculateAverages(player.id, votes, player);
                 const voteCount = utils.countVotes(player.id, votes);
-                const score = averages[skillName];
+                const score = averages ? averages[skillName] : undefined;
                 
                 return { ...player, score, voteCount };
             })
