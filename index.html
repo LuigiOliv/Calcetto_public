@@ -786,7 +786,7 @@ function RoleEditModal({ user, onClose, onSuccess }) {
     );
 }
 		
-function Header({ user, onLogout, onOpenSettings }) {
+function Header({ user, onLogout, onOpenSettings, setActiveTab }) {
     const [showMenu, setShowMenu] = React.useState(false);
     
     return (
@@ -814,16 +814,26 @@ function Header({ user, onLogout, onOpenSettings }) {
         {showMenu ? '✕' : '☰'}
     </button>
     
-    {showMenu && (
-        <div className="user-dropdown-menu">
-            <button className="dropdown-item" onClick={() => { onOpenSettings(); setShowMenu(false); }}>
-                ⚙️ Impostazioni
-            </button>
-            <button className="dropdown-item logout" onClick={() => { onLogout(); setShowMenu(false); }}>
-                🚪 Esci
-            </button>
-        </div>
-    )}
+{showMenu && (
+    <div className="user-dropdown-menu">
+        <button className="dropdown-item" onClick={() => { onOpenSettings(); setShowMenu(false); }}>
+            ⚙️ Impostazioni
+        </button>
+        {currentUser.isAdmin && (
+            <>
+                <button className="dropdown-item" onClick={() => { setActiveTab('admin'); setShowMenu(false); }}>
+                    🔧 Pannello Admin
+                </button>
+                <button className="dropdown-item" onClick={() => { setActiveTab('debug'); setShowMenu(false); }}>
+                    🛠 Debug
+                </button>
+            </>
+        )}
+        <button className="dropdown-item logout" onClick={() => { onLogout(); setShowMenu(false); }}>
+            🚪 Esci
+        </button>
+    </div>
+)}
 </div>
                 </div>
             );
@@ -4604,7 +4614,14 @@ if (currentUser && currentUser.preferredRole) {
                 <div className="app-container">
 {showRoleModal && <RoleSelectionModal onSave={handleRolesSave} />}
 {showAntonioSelector && <ProfileSelectorModal profiles={antonioProfiles} onSelect={handleAntonioProfileSelect} />}
-<Header user={currentUser} onLogout={handleLogout} onOpenSettings={() => setActiveTab('impostazioni')} />
+
+					
+<Header 
+    user={currentUser} 
+    onLogout={handleLogout} 
+    onOpenSettings={() => setActiveTab('impostazioni')}
+    setActiveTab={setActiveTab}
+/>
                     <div className="nav-tabs">
 						<button className={`nav-tab ${activeTab === 'partite' ? 'active' : ''}`} 
         onClick={() => { 
@@ -4618,8 +4635,6 @@ if (currentUser && currentUser.preferredRole) {
                         <button className={`nav-tab ${activeTab === 'valuta' ? 'active' : ''}`} onClick={() => { setActiveTab('valuta'); setSelectedPlayer(null); setViewingProfile(null); }}>⚽ Valuta</button>
                         <button className={`nav-tab ${activeTab === 'profilo' ? 'active' : ''}`} onClick={() => { setActiveTab('profilo'); setSelectedPlayer(null); setViewingProfile(null); }}>👤 Profilo</button>
                         <button className={`nav-tab ${activeTab === 'classifiche' ? 'active' : ''}`} onClick={() => { setActiveTab('classifiche'); setSelectedPlayer(null); setViewingProfile(null); }}>📊 Classifiche</button>
-                        {currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => { setActiveTab('admin'); setSelectedPlayer(null); setViewingProfile(null); }}>🔧 Admin</button>}
-                        {currentUser.isAdmin && <button className={`nav-tab ${activeTab === 'debug' ? 'active' : ''}`} onClick={() => { setActiveTab('debug'); setSelectedPlayer(null); setViewingProfile(null); }}>🐛 Debug</button>}
                     </div>
                     <div className="content">
                         {viewingProfile ? (
