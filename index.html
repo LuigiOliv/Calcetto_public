@@ -828,7 +828,7 @@ function Header({ user, onLogout, onOpenSettings, setActiveTab }) {
         <button className="dropdown-item" onClick={() => { onOpenSettings(); setShowMenu(false); }}>
             ⚙️ Impostazioni
         </button>
-        {currentUser.isAdmin && (
+        {User.isAdmin && (
             <>
                 <button className="dropdown-item" onClick={() => { setActiveTab('admin'); setShowMenu(false); }}>
                     🔧 Pannello Admin
